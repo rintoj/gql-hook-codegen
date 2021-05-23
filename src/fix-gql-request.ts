@@ -44,14 +44,14 @@ function parseSelection(
     const scalar = isScalarType(type)
     if (!scalar && selectionSet.selectionSet) {
       const objectType = findObjectType(context.schema, type)
-      context.path.push(queryName)
-      const variableMap = targetField?.arguments?.map(variable => addVariable(context, variable))
+      const newContext = { ...context, path: [...context.path, queryName] }
+      const variableMap = targetField?.arguments?.map(variable => addVariable(newContext, variable))
       return {
         ...selectionSet,
         arguments: targetField?.arguments?.map(variable =>
           inputValueDefToVariable(variable, variableMap),
         ),
-        selectionSet: parseSelectionSet(selectionSet.selectionSet, objectType, context),
+        selectionSet: parseSelectionSet(selectionSet.selectionSet, objectType, newContext),
       }
     }
     const variableMap = targetField?.arguments?.map(variable => addVariable(context, variable))

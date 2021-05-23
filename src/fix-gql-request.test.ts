@@ -147,6 +147,68 @@ describe('fixGQLRequestArguments', () => {
     )
   })
 
+  test('should fix more than one argument for 3 level query with variables with same name', () => {
+    const query = `
+      query {
+        user {
+          name
+          follower {
+            id
+            name
+            follower {
+              id
+              name
+            }
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($id: ID!, $userFollowerId: ID!, $userFollowerFollowerId: ID!) {
+          user(id: $id) {
+            name
+            follower(id: $userFollowerId) {
+              id
+              name
+              follower(id: $userFollowerFollowerId) {
+                id
+                name
+              }
+            }
+          }
+        }
+      `),
+    )
+  })
+
+  test('should fix batched query', () => {
+    const query = `
+      query {
+        user {
+          name
+        }
+        followers {
+          id
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($id: ID!, $followersId: ID!, $limit: Number) {
+          user(id: $id) {
+            name
+          }
+          followers(id: $followersId, limit: $limit) {
+            id
+          }
+        }
+      `),
+    )
+  })
+
   test('should fix argument for a simple mutation', () => {
     const query = `
       mutation {

@@ -55,6 +55,34 @@ describe('fixGQLRequestArguments', () => {
     )
   })
 
+  test('should fix more than one argument for a complex query', () => {
+    const query = `
+      query {
+        user {
+          name
+          followers {
+            id
+            name
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($id: ID!, $limit: Number) {
+          user(id: $id) {
+            name
+            followers(limit: $limit) {
+              id
+              name
+            }
+          }
+        }
+      `),
+    )
+  })
+
   test('should fix argument for a simple mutation', () => {
     const query = `
       mutation {

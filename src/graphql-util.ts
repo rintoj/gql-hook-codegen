@@ -35,10 +35,7 @@ export function findObjectType(schema: DocumentNode, type: string) {
 }
 
 export function findField(def: gql.ObjectTypeDefinitionNode, name: string) {
-  const field = def.fields?.find(
-    def => def.kind === gql.Kind.FIELD_DEFINITION && def.name.value === name,
-  )
-  return required(field, `No such field: ${name}`)
+  return def.fields?.find(def => def.kind === gql.Kind.FIELD_DEFINITION && def.name.value === name)
 }
 
 export function findDeepType(def: gql.TypeNode): string {

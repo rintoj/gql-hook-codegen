@@ -10,7 +10,7 @@ function format(content: string) {
 
 const schema = loadSchema('test/schema.gql')
 
-describe('fixGQLRequestArguments', () => {
+describe('fixGQLRequest', () => {
   test('should fix argument for a simple query', () => {
     const query = `
       query {
@@ -45,7 +45,7 @@ describe('fixGQLRequestArguments', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(format(fixedQuery)).toEqual(
       format(`
-        query ($id: ID!, $limit: Number) {
+        query ($id: ID!, $limit: Int) {
           followers(id: $id, limit: $limit) {
             id
             name
@@ -70,7 +70,7 @@ describe('fixGQLRequestArguments', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(format(fixedQuery)).toEqual(
       format(`
-        query ($id: ID!, $limit: Number) {
+        query ($id: ID!, $limit: Int) {
           user(id: $id) {
             name
             followers(limit: $limit) {
@@ -102,7 +102,7 @@ describe('fixGQLRequestArguments', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(format(fixedQuery)).toEqual(
       format(`
-        query ($id: ID!, $limit: Number, $userFollowersFollowersLimit: Number) {
+        query ($id: ID!, $limit: Int, $userFollowersFollowersLimit: Int) {
           user(id: $id) {
             name
             followers(limit: $limit) {
@@ -197,7 +197,7 @@ describe('fixGQLRequestArguments', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(format(fixedQuery)).toEqual(
       format(`
-        query ($id: ID!, $followersId: ID!, $limit: Number) {
+        query ($id: ID!, $followersId: ID!, $limit: Int) {
           user(id: $id) {
             name
           }
@@ -223,7 +223,7 @@ describe('fixGQLRequestArguments', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(format(fixedQuery)).toEqual(
       format(`
-        query ($userId: ID!, $followersId: ID!, $limit: Number) {
+        query ($userId: ID!, $followersId: ID!, $limit: Int) {
           user(id: $userId) {
             name
           }
@@ -233,6 +233,45 @@ describe('fixGQLRequestArguments', () => {
         }
       `),
     )
+  })
+
+  test('should throw an error if invalid selector is used in a query', () => {
+    const query = `
+      query {
+        user {
+          id
+          name
+          invalid
+        }
+      }
+    `
+    expect(() => fixGQLRequest(schema, query)).toThrowError()
+  })
+
+  test('should throw an error if invalid selector is used in a mutation', () => {
+    const query = `
+      mutation {
+        registerUser {
+          id
+          name
+          invalid
+        }
+      }
+    `
+    expect(() => fixGQLRequest(schema, query)).toThrow()
+  })
+
+  test('should throw an error if invalid selector is used in a subscription', () => {
+    const query = `
+      subscription {
+        onUserChange {
+          id
+          name
+          invalid
+        }
+      }
+    `
+    expect(() => fixGQLRequest(schema, query)).toThrowError()
   })
 
   test('should fix argument for a simple mutation', () => {
@@ -260,7 +299,7 @@ describe('fixGQLRequestArguments', () => {
   test('should fix argument for a simple subscription', () => {
     const query = `
       subscription {
-        onUpdateUser {
+        onUserChange {
           id
           name
         }
@@ -270,7 +309,7 @@ describe('fixGQLRequestArguments', () => {
     expect(format(fixedQuery)).toEqual(
       format(`
         subscription ($id: ID!) {
-          onUpdateUser(id: $id) {
+          onUserChange(id: $id) {
             id
             name
           }

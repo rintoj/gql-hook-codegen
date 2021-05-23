@@ -21,54 +21,61 @@ function addVariable(
   existingArguments: ReadonlyArray<gql.ArgumentNode>,
   variable: gql.InputValueDefinitionNode,
 ) {
-  const variableNames = context.variables.map(item => item.name.value)
-  const names = existingArguments.map(item => item.name.value)
   const from = variable.name.value
-  const to = names.includes(from)
-    ? (existingArguments?.find(item => item.name.value === from) as any)?.value?.name.value
+  const variableNames = context.variables.map(item => item.name.value)
+  const existingArg = existingArguments.find(item => item.name.value === from)
+  const to = existingArg
+    ? (existingArg as any)?.value?.name.value
     : variableNames.includes(from)
     ? toCamelCase([...context.path, from].join('-'))
     : variable.name.value
-  context.variables.push({
-    ...variable,
-    name: {
-      ...variable.name,
-      value: to,
-    },
-  })
+  context.variables.push({ ...variable, name: { ...variable.name, value: to } })
   return { from, to }
 }
 
 function composeArgumentList(
-  inputValue: ReadonlyArray<gql.InputValueDefinitionNode>,
-  existingArguments: ReadonlyArray<gql.ArgumentNode>,
+  inputValues: ReadonlyArray<gql.InputValueDefinitionNode>,
+  argumentNodes: ReadonlyArray<gql.ArgumentNode>,
   variableMap: Array<{ from: string; to: string }> = [],
 ) {
-  const names = existingArguments.map(item => item.name.value)
-  return inputValue.map(input => {
-    if (names.includes(input.name.value)) {
-      return existingArguments.find(
-        item => item.name.value === input.name.value,
-      ) as gql.ArgumentNode
+  return inputValues.map(input => {
+    const argumentNode = argumentNodes.find(item => item.name.value === input.name.value)
+    if (argumentNode) {
+      return argumentNode
     }
     return inputValueDefToVariable(input, variableMap)
   })
 }
 
+function deduplicateVariables(
+  inputValues: ReadonlyArray<gql.InputValueDefinitionNode>,
+  argumentNodes: ReadonlyArray<gql.ArgumentNode>,
+  context: Context,
+) {
+  return inputValues?.map(variable => addVariable(context, argumentNodes ?? [], variable))
+}
+
 function parseSelection(
   selection: gql.SelectionNode,
   objectDef: gql.ObjectTypeDefinitionNode,
-  context: Context,
+  initialContext: Context,
 ) {
   if (selection.kind === gql.Kind.FIELD) {
     const queryName = selection.name.value
     const targetField = findField(objectDef, queryName)
+    if (!targetField) {
+      throw new Error(`Invalid field: "${[initialContext.path, queryName].join('.')}"`)
+    }
     const type = findDeepType(targetField.type)
     const scalar = isScalarType(type)
-    const objectType = !scalar ? findObjectType(context.schema, type) : undefined
-    const targetContext = !scalar ? { ...context, path: [...context.path, queryName] } : context
-    const variableMap = targetField?.arguments?.map(variable =>
-      addVariable(targetContext, selection.arguments ?? [], variable),
+    const objectType = !scalar ? findObjectType(initialContext.schema, type) : undefined
+    const context = !scalar
+      ? { ...initialContext, path: [...initialContext.path, queryName] }
+      : initialContext
+    const variableMap = deduplicateVariables(
+      targetField.arguments ?? [],
+      selection.arguments ?? [],
+      context,
     )
     const argumentList = composeArgumentList(
       targetField.arguments ?? [],
@@ -76,8 +83,8 @@ function parseSelection(
       variableMap,
     )
     const selectionSet =
-      !scalar && selection.selectionSet && objectType
-        ? parseSelectionSet(selection.selectionSet, objectType, targetContext)
+      selection.selectionSet && objectType
+        ? parseSelectionSet(selection.selectionSet, objectType, context)
         : undefined
     return {
       ...selection,
@@ -114,6 +121,10 @@ function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
 }
 
 export function fixGQLRequest(schema: DocumentNode, query: string) {
-  const newQuery = gql.parse(query).definitions.map(def => parseOperationDef(schema, def))
-  return newQuery.map(q => gql.print(q)).join('\n')
+  try {
+    const newQuery = gql.parse(query).definitions.map(def => parseOperationDef(schema, def))
+    return newQuery.map(q => gql.print(q)).join('\n')
+  } catch (e) {
+    throw new Error(`Failed to process ${query}${e.message}`)
+  }
 }

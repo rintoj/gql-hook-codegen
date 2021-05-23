@@ -3,9 +3,9 @@ type User {
   name: String
   email: String
   isRegistered: Boolean
-  numberOfFollowers: Number
+  numberOfFollowers: Int
   follower(id: ID!): User
-  followers(limit: Number): [User]!
+  followers(limit: Int): [User]!
 }
 
 input RegisterUserInput {
@@ -15,7 +15,7 @@ input RegisterUserInput {
 
 type Query {
   user(id: ID!): User
-  followers(id: ID!, limit: Number): [User]!
+  followers(id: ID!, limit: Int): [User]!
 }
 
 type Mutation {
@@ -23,5 +23,5 @@ type Mutation {
 }
 
 type Subscription {
-  onUpdateUser(id: ID!): User!
+  onUserChange(id: ID!): User!
 }

@@ -209,6 +209,32 @@ describe('fixGQLRequestArguments', () => {
     )
   })
 
+  test('should reuse existing variable names', () => {
+    const query = `
+      query ($userId: ID!, $followersId: ID!) {
+        user(id: $userId) {
+          name
+        }
+        followers(id: $followersId) {
+          id
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($userId: ID!, $followersId: ID!, $limit: Number) {
+          user(id: $userId) {
+            name
+          }
+          followers(id: $followersId, limit: $limit) {
+            id
+          }
+        }
+      `),
+    )
+  })
+
   test('should fix argument for a simple mutation', () => {
     const query = `
       mutation {

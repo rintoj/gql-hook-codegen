@@ -16,10 +16,17 @@ interface Context {
   variables: gql.InputValueDefinitionNode[]
 }
 
-function addVariable(context: Context, variable: gql.InputValueDefinitionNode) {
+function addVariable(
+  context: Context,
+  existingArguments: ReadonlyArray<gql.ArgumentNode>,
+  variable: gql.InputValueDefinitionNode,
+) {
   const variableNames = context.variables.map(item => item.name.value)
+  const names = existingArguments.map(item => item.name.value)
   const from = variable.name.value
-  const to = variableNames.includes(from)
+  const to = names.includes(from)
+    ? (existingArguments?.find(item => item.name.value === from) as any)?.value?.name.value
+    : variableNames.includes(from)
     ? toCamelCase([...context.path, from].join('-'))
     : variable.name.value
   context.variables.push({
@@ -32,37 +39,53 @@ function addVariable(context: Context, variable: gql.InputValueDefinitionNode) {
   return { from, to }
 }
 
+function composeArgumentList(
+  inputValue: ReadonlyArray<gql.InputValueDefinitionNode>,
+  existingArguments: ReadonlyArray<gql.ArgumentNode>,
+  variableMap: Array<{ from: string; to: string }> = [],
+) {
+  const names = existingArguments.map(item => item.name.value)
+  return inputValue.map(input => {
+    if (names.includes(input.name.value)) {
+      return existingArguments.find(
+        item => item.name.value === input.name.value,
+      ) as gql.ArgumentNode
+    }
+    return inputValueDefToVariable(input, variableMap)
+  })
+}
+
 function parseSelection(
-  selectionSet: gql.SelectionNode,
+  selection: gql.SelectionNode,
   objectDef: gql.ObjectTypeDefinitionNode,
   context: Context,
 ) {
-  if (selectionSet.kind === gql.Kind.FIELD) {
-    const queryName = selectionSet.name.value
+  if (selection.kind === gql.Kind.FIELD) {
+    const queryName = selection.name.value
     const targetField = findField(objectDef, queryName)
     const type = findDeepType(targetField.type)
     const scalar = isScalarType(type)
-    if (!scalar && selectionSet.selectionSet) {
-      const objectType = findObjectType(context.schema, type)
-      const newContext = { ...context, path: [...context.path, queryName] }
-      const variableMap = targetField?.arguments?.map(variable => addVariable(newContext, variable))
-      return {
-        ...selectionSet,
-        arguments: targetField?.arguments?.map(variable =>
-          inputValueDefToVariable(variable, variableMap),
-        ),
-        selectionSet: parseSelectionSet(selectionSet.selectionSet, objectType, newContext),
-      }
-    }
-    const variableMap = targetField?.arguments?.map(variable => addVariable(context, variable))
+    const objectType = !scalar ? findObjectType(context.schema, type) : undefined
+    const targetContext = !scalar ? { ...context, path: [...context.path, queryName] } : context
+    const variableMap = targetField?.arguments?.map(variable =>
+      addVariable(targetContext, selection.arguments ?? [], variable),
+    )
+    const argumentList = composeArgumentList(
+      targetField.arguments ?? [],
+      selection.arguments ?? [],
+      variableMap,
+    )
+    const selectionSet =
+      !scalar && selection.selectionSet && objectType
+        ? parseSelectionSet(selection.selectionSet, objectType, targetContext)
+        : undefined
     return {
-      ...selectionSet,
-      arguments: targetField?.arguments?.map(variable =>
-        inputValueDefToVariable(variable, variableMap),
-      ),
+      ...selection,
+      arguments: argumentList,
+      selectionSet,
     }
   }
-  return selectionSet
+  return selection
 }
 
 function parseSelectionSet(

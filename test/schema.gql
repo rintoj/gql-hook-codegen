@@ -1,0 +1,26 @@
+type User {
+  id: ID!
+  name: String
+  email: String
+  isRegistered: Boolean
+  numberOfFollowers: Number
+  followers(limit: Number): [User]!
+}
+
+input RegisterUserInput {
+  name: String!
+  email: String!
+}
+
+type Query {
+  user(id: ID!): User
+  followers(id: ID!, limit: Number): [User]!
+}
+
+type Mutation {
+  registerUser(input: RegisterUserInput!): User!
+}
+
+type Subscription {
+  onUpdateUser(id: ID!): User!
+}

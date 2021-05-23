@@ -83,6 +83,70 @@ describe('fixGQLRequestArguments', () => {
     )
   })
 
+  test('should fix more than one argument for a complex query with 3 level deep', () => {
+    const query = `
+      query {
+        user {
+          name
+          followers {
+            id
+            name
+            followers {
+              id
+              name
+            }
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($id: ID!, $limit: Number, $userFollowersFollowersLimit: Number) {
+          user(id: $id) {
+            name
+            followers(limit: $limit) {
+              id
+              name
+              followers(limit: $userFollowersFollowersLimit) {
+                id
+                name
+              }
+            }
+          }
+        }
+      `),
+    )
+  })
+
+  test('should fix more than one argument for a complex query with variables with same name', () => {
+    const query = `
+      query {
+        user {
+          name
+          follower {
+            id
+            name
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(format(fixedQuery)).toEqual(
+      format(`
+        query ($id: ID!, $userFollowerId: ID!) {
+          user(id: $id) {
+            name
+            follower(id: $userFollowerId) {
+              id
+              name
+            }
+          }
+        }
+      `),
+    )
+  })
+
   test('should fix argument for a simple mutation', () => {
     const query = `
       mutation {

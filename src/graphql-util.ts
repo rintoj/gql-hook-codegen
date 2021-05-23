@@ -67,13 +67,21 @@ export function inputValueDefToVariableDef(
   }
 }
 
-export function inputValueDefToVariable(input: gql.InputValueDefinitionNode): gql.ArgumentNode {
+export function inputValueDefToVariable(
+  input: gql.InputValueDefinitionNode,
+  variableMap: Array<{ from: string; to: string }> = [],
+): gql.ArgumentNode {
+  const variableName =
+    variableMap?.find(({ from }) => from === input.name.value)?.to ?? input.name.value
   return {
     kind: gql.Kind.ARGUMENT,
     name: input.name,
     value: {
       kind: gql.Kind.VARIABLE,
-      name: input.name,
+      name: {
+        ...input.name,
+        value: variableName,
+      },
     },
   }
 }

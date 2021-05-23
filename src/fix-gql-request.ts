@@ -1,6 +1,6 @@
 import * as gql from 'graphql'
 import { DocumentNode } from 'graphql'
-import { toClassName } from 'name-util'
+import { toCamelCase, toClassName } from 'name-util'
 import {
   findField,
   findDeepType,
@@ -12,7 +12,24 @@ import {
 
 interface Context {
   schema: DocumentNode
+  path: string[]
   variables: gql.InputValueDefinitionNode[]
+}
+
+function addVariable(context: Context, variable: gql.InputValueDefinitionNode) {
+  const variableNames = context.variables.map(item => item.name.value)
+  const from = variable.name.value
+  const to = variableNames.includes(from)
+    ? toCamelCase([...context.path, from].join('-'))
+    : variable.name.value
+  context.variables.push({
+    ...variable,
+    name: {
+      ...variable.name,
+      value: to,
+    },
+  })
+  return { from, to }
 }
 
 function parseSelection(
@@ -23,20 +40,26 @@ function parseSelection(
   if (selectionSet.kind === gql.Kind.FIELD) {
     const queryName = selectionSet.name.value
     const targetField = findField(objectDef, queryName)
-    context.variables = [...context.variables, ...(targetField?.arguments ?? [])]
     const type = findDeepType(targetField.type)
     const scalar = isScalarType(type)
     if (!scalar && selectionSet.selectionSet) {
       const objectType = findObjectType(context.schema, type)
+      context.path.push(queryName)
+      const variableMap = targetField?.arguments?.map(variable => addVariable(context, variable))
       return {
         ...selectionSet,
-        arguments: targetField?.arguments?.map(inputValueDefToVariable),
+        arguments: targetField?.arguments?.map(variable =>
+          inputValueDefToVariable(variable, variableMap),
+        ),
         selectionSet: parseSelectionSet(selectionSet.selectionSet, objectType, context),
       }
     }
+    const variableMap = targetField?.arguments?.map(variable => addVariable(context, variable))
     return {
       ...selectionSet,
-      arguments: targetField?.arguments?.map(inputValueDefToVariable),
+      arguments: targetField?.arguments?.map(variable =>
+        inputValueDefToVariable(variable, variableMap),
+      ),
     }
   }
   return selectionSet
@@ -56,7 +79,7 @@ function parseSelectionSet(
 function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
     const type = def.operation
-    const context = { schema, variables: [] }
+    const context = { schema, path: [], variables: [] }
     const operationDef = findObjectType(schema, toClassName(type))
     return {
       ...def,

@@ -4,6 +4,7 @@ type User {
   email: String
   isRegistered: Boolean
   numberOfFollowers: Number
+  follower(id: ID!): User
   followers(limit: Number): [User]!
 }
 

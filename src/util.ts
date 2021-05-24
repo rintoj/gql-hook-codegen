@@ -4,3 +4,10 @@ export function required<T>(value: T | null | undefined, name: string): T {
   }
   return value
 }
+
+export function trimPadding(content: string) {
+  return content
+    .split('\n')
+    .map(i => i.trim())
+    .filter(i => i !== '')
+}

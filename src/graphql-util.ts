@@ -38,6 +38,13 @@ export function findField(def: gql.ObjectTypeDefinitionNode, name: string) {
   return def.fields?.find(def => def.kind === gql.Kind.FIELD_DEFINITION && def.name.value === name)
 }
 
+export function findOperation(schema: DocumentNode) {
+  const def = schema.definitions.find(def => def.kind === gql.Kind.OPERATION_DEFINITION)
+  if (def) {
+    return (def as gql.OperationDefinitionNode).operation
+  }
+}
+
 export function findDeepType(def: gql.TypeNode): string {
   if (def.kind === 'NamedType') {
     return def.name.value

@@ -1,12 +1,6 @@
 import { fixGQLRequest } from './fix-gql-request'
 import { loadSchema } from './graphql-util'
-
-function format(content: string) {
-  return content
-    .split('\n')
-    .map(i => i.trim())
-    .filter(i => i !== '')
-}
+import { trimPadding } from './util'
 
 const schema = loadSchema('test/schema.gql')
 
@@ -21,8 +15,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!) {
           user(id: $id) {
             id
@@ -43,8 +37,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $limit: Int) {
           followers(id: $id, limit: $limit) {
             id
@@ -68,8 +62,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $limit: Int) {
           user(id: $id) {
             name
@@ -100,8 +94,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $limit: Int, $userFollowersFollowersLimit: Int) {
           user(id: $id) {
             name
@@ -132,8 +126,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $userFollowerId: ID!) {
           user(id: $id) {
             name
@@ -164,8 +158,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $userFollowerId: ID!, $userFollowerFollowerId: ID!) {
           user(id: $id) {
             name
@@ -195,8 +189,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($id: ID!, $followersId: ID!, $limit: Int) {
           user(id: $id) {
             name
@@ -221,8 +215,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         query ($userId: ID!, $followersId: ID!, $limit: Int) {
           user(id: $userId) {
             name
@@ -284,8 +278,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         mutation ($input: RegisterUserInput!) {
           registerUser(input: $input) {
             id
@@ -306,8 +300,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(format(fixedQuery)).toEqual(
-      format(`
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
         subscription ($id: ID!) {
           onUserChange(id: $id) {
             id

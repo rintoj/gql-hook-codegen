@@ -12,6 +12,7 @@ interface Field {
 
 interface Type {
   name: string
+  path: string[]
   fields: Field[]
 }
 
@@ -69,9 +70,11 @@ function extractTypeInfo(
   name: string,
   selectionSet: gql.SelectionSetNode | undefined,
   objectDef: gql.ObjectTypeDefinitionNode,
+  context: Context,
 ) {
   return {
     name,
+    path: context.path,
     fields:
       mapEachField(selectionSet, (selection): Field => {
         const targetField = findField(objectDef, selection.name.value) as gql.FieldDefinitionNode
@@ -93,7 +96,10 @@ function parseSelection(
   const type = findDeepType(targetField.type)
   const scalar = isScalarType(type)
   if (!scalar && selection.selectionSet) {
-    return extractTypes(type, selection.selectionSet, context)
+    return extractTypes(type, selection.selectionSet, {
+      ...context,
+      path: [...context.path, fieldName],
+    })
   }
   return []
 }
@@ -101,7 +107,7 @@ function parseSelection(
 function extractTypes(type: string, selectionSet: gql.SelectionSetNode, context: Context) {
   let output: Type[] = []
   const objectDef = findObjectType(context.schema, toClassName(type))
-  output.push(extractTypeInfo(toClassName(type), selectionSet, objectDef))
+  output.push(extractTypeInfo(toClassName(type), selectionSet, objectDef, context))
   mapEachField(selectionSet, selection => {
     output = [...output, ...parseSelection(objectDef, selection, context)]
   })
@@ -117,7 +123,11 @@ function extractRequestType(def: gql.OperationDefinitionNode, context: Context):
         ...parseFieldAttributes(vDef.type),
       }),
     ) ?? []
-  output.push({ name: 'Request', fields })
+  output.push({
+    name: 'Request',
+    path: context.path,
+    fields,
+  })
   def.variableDefinitions?.forEach((vDef: gql.VariableDefinitionNode) => {
     const type = findDeepType(vDef.type)
     const scalar = isScalarType(type)
@@ -135,8 +145,14 @@ export function extractGQLTypes(
   const context = { schema, path: [] }
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
     return [
-      ...extractRequestType(def, context),
-      ...extractTypes(def.operation, def.selectionSet, context),
+      ...extractRequestType(def, {
+        ...context,
+        path: [...context.path, 'variables'],
+      }),
+      ...extractTypes(def.operation, def.selectionSet, {
+        ...context,
+        path: [...context.path, def.operation],
+      }),
     ]
   }
   return []

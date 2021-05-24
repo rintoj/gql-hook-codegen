@@ -13,10 +13,10 @@ describe('extractGQLTypes', () => {
       }
     `)
     const types = extractGQLTypes(schema, request.definitions[0])
-    console.log(JSON.stringify(types, null, 2))
     expect(types).toEqual([
       {
         name: 'Request',
+        path: ['variables'],
         fields: [
           {
             name: 'id',
@@ -27,6 +27,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'Query',
+        path: ['query'],
         fields: [
           {
             name: 'user',
@@ -36,11 +37,80 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'User',
+        path: ['query', 'user'],
         fields: [
           {
             name: 'id',
             type: 'ID',
             isNonNull: true,
+          },
+        ],
+      },
+    ])
+  })
+
+  test('should extract types', () => {
+    const request: any = parseSchema(`
+      query ($id: ID!, $limit: Int) {
+        user(id: $id) {
+          id
+          followers(limit: $limit) {
+            name
+          }
+        }
+      }
+    `)
+    const types = extractGQLTypes(schema, request.definitions[0])
+    expect(types).toEqual([
+      {
+        name: 'Request',
+        path: ['variables'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'limit',
+            type: 'Int',
+          },
+        ],
+      },
+      {
+        name: 'Query',
+        path: ['query'],
+        fields: [
+          {
+            name: 'user',
+            type: 'User',
+          },
+        ],
+      },
+      {
+        name: 'User',
+        path: ['query', 'user'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'followers',
+            type: 'User',
+            isArray: true,
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'User',
+        path: ['query', 'user', 'followers'],
+        fields: [
+          {
+            name: 'name',
+            type: 'String',
           },
         ],
       },

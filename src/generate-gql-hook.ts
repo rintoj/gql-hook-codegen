@@ -6,6 +6,7 @@ import * as ts from 'typescript'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
 import { parseTS, printTS, selectTSNode } from './typescript-util'
+import { ById } from './util'
 
 const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 
@@ -19,6 +20,10 @@ enum TypeToKeyword {
   'string' = ts.SyntaxKind.StringKeyword,
   'number' = ts.SyntaxKind.NumberKeyword,
   'boolean' = ts.SyntaxKind.BooleanKeyword,
+}
+
+interface Context {
+  imports: ById<string[]>
 }
 
 function createImportStatement(clause: string, file: string) {
@@ -235,14 +240,6 @@ export function generateUseHook({
       variable,
     }),
   ]
-}
-
-interface ById<T> {
-  [id: string]: T
-}
-
-interface Context {
-  imports: ById<string[]>
 }
 
 export function createNamedImports(context: Context) {

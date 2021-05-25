@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import * as crypto from 'crypto'
 
 export function required<T>(value: T | null | undefined, name: string): T {
   if (!value) {

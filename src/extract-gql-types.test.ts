@@ -15,7 +15,7 @@ describe('extractGQLTypes', () => {
     const types = extractGQLTypes(schema, request.definitions[0])
     expect(types).toEqual([
       {
-        name: 'Request',
+        name: 'RequestType',
         path: ['variables'],
         fields: [
           {
@@ -26,17 +26,17 @@ describe('extractGQLTypes', () => {
         ],
       },
       {
-        name: 'Query',
+        name: 'QueryType',
         path: ['query'],
         fields: [
           {
             name: 'user',
-            type: 'User',
+            type: 'UserType',
           },
         ],
       },
       {
-        name: 'User',
+        name: 'UserType',
         path: ['query', 'user'],
         fields: [
           {
@@ -49,12 +49,13 @@ describe('extractGQLTypes', () => {
     ])
   })
 
-  test('should extract types', () => {
+  test('should extract complex types', () => {
     const request: any = parseSchema(`
       query ($id: ID!, $limit: Int) {
         user(id: $id) {
           id
           followers(limit: $limit) {
+            id
             name
           }
         }
@@ -63,7 +64,7 @@ describe('extractGQLTypes', () => {
     const types = extractGQLTypes(schema, request.definitions[0])
     expect(types).toEqual([
       {
-        name: 'Request',
+        name: 'RequestType',
         path: ['variables'],
         fields: [
           {
@@ -78,17 +79,17 @@ describe('extractGQLTypes', () => {
         ],
       },
       {
-        name: 'Query',
+        name: 'QueryType',
         path: ['query'],
         fields: [
           {
             name: 'user',
-            type: 'User',
+            type: 'UserType',
           },
         ],
       },
       {
-        name: 'User',
+        name: 'UserType',
         path: ['query', 'user'],
         fields: [
           {
@@ -98,16 +99,21 @@ describe('extractGQLTypes', () => {
           },
           {
             name: 'followers',
-            type: 'User',
+            type: 'FollowersUserType',
             isArray: true,
             isNonNull: true,
           },
         ],
       },
       {
-        name: 'User',
+        name: 'FollowersUserType',
         path: ['query', 'user', 'followers'],
         fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
           {
             name: 'name',
             type: 'String',

@@ -6,92 +6,21 @@ import * as ts from 'typescript'
 import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
-import { parseTS, printTS, selectTSNode } from './typescript-util'
+import {
+  createGQLQuery,
+  createImportStatement,
+  createInterface,
+  createNamedImports,
+  parseTS,
+  printTS,
+  selectTSNode,
+} from './typescript-util'
 import { ById, reduceToFlatArray } from './util'
 
 const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 
-enum GQLTypeToJSType {
-  'ID' = ts.SyntaxKind.StringKeyword,
-  'String' = ts.SyntaxKind.StringKeyword,
-  'Int' = ts.SyntaxKind.NumberKeyword,
-  'Float' = ts.SyntaxKind.NumberKeyword,
-  'Boolean' = ts.SyntaxKind.BooleanKeyword,
-}
-
 interface Context {
   imports: ById<string[]>
-}
-
-function createImportStatement(clause: string, file: string) {
-  return ts.factory.createImportDeclaration(
-    undefined,
-    undefined,
-    ts.factory.createImportClause(false, ts.factory.createIdentifier(clause), undefined),
-    ts.factory.createStringLiteral(file),
-  )
-}
-
-function createNamedImportStatement(imports: string[], file: string) {
-  return ts.factory.createImportDeclaration(
-    undefined,
-    undefined,
-    ts.factory.createImportClause(
-      false,
-      undefined,
-      ts.factory.createNamedImports(
-        imports.map(importItem =>
-          ts.factory.createImportSpecifier(undefined, ts.factory.createIdentifier(importItem)),
-        ),
-      ),
-    ),
-    ts.factory.createStringLiteral(file),
-  )
-}
-
-function createGQLQuery(query: string, variableName = 'query') {
-  return ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier(variableName),
-          undefined,
-          undefined,
-          ts.factory.createTaggedTemplateExpression(
-            ts.factory.createIdentifier('gql'),
-            undefined,
-            ts.factory.createNoSubstitutionTemplateLiteral(query),
-          ),
-        ),
-      ],
-      ts.NodeFlags.Const,
-    ),
-  )
-}
-
-function createInterface({ name, fields }: GQLType) {
-  return ts.factory.createInterfaceDeclaration(
-    undefined,
-    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    ts.factory.createIdentifier(name),
-    undefined,
-    undefined,
-    fields.map(field => {
-      const type = (GQLTypeToJSType as any)[field.type as string]
-      return ts.factory.createPropertySignature(
-        undefined,
-        ts.factory.createIdentifier(field.name),
-        field.isNonNull ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
-        type
-          ? ts.factory.createKeywordTypeNode(type)
-          : ts.factory.createTypeReferenceNode(
-              ts.factory.createIdentifier(field.type as string),
-              undefined,
-            ),
-      )
-    }),
-  )
 }
 
 function createHook({
@@ -223,16 +152,6 @@ function extractGQL(query: string) {
   }
 }
 
-function createNamedImports(context: Context) {
-  return Object.keys(context.imports).map((fileName: string) => {
-    const imports = (context.imports as any)[fileName]
-    const uniqueImports = Object.values(
-      Object.fromEntries(imports.map((imp: string) => [imp, imp])),
-    )
-    return createNamedImportStatement(uniqueImports, fileName)
-  })
-}
-
 function generateUniqueName(def: gql.OperationDefinitionNode) {
   return def.selectionSet.selections
     .map(field => {
@@ -260,7 +179,7 @@ function generateHookForOperation(
     const requiredRequestVariables = findRequiredRequestVariables(dataTypes)
     const statements = dataTypes.map(dataType => {
       if (dataType.type === GQLObjectType.INTERFACE) {
-        return createInterface(dataType)
+        return createInterface(dataType, dataType.name === 'RequestType')
       }
     })
 
@@ -297,7 +216,7 @@ export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): st
 
   return createTSContent([
     createImportStatement('gql', 'graphql-tag'),
-    ...createNamedImports(context),
+    ...createNamedImports(context.imports),
     createGQLQuery(fixedQuery),
     ...statements,
   ])

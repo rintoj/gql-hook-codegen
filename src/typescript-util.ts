@@ -1,6 +1,16 @@
 import { readFileSync } from 'fs'
 import { basename } from 'path'
 import * as ts from 'typescript'
+import { GQLType } from './extract-gql-types'
+import { ById } from './util'
+
+enum GQLTypeToJSType {
+  'ID' = ts.SyntaxKind.StringKeyword,
+  'String' = ts.SyntaxKind.StringKeyword,
+  'Int' = ts.SyntaxKind.NumberKeyword,
+  'Float' = ts.SyntaxKind.NumberKeyword,
+  'Boolean' = ts.SyntaxKind.BooleanKeyword,
+}
 
 export function readAndParseTSFile(filePath: string) {
   return parseTSFile(filePath, readFileSync(filePath, 'utf8'))
@@ -151,4 +161,97 @@ export function printTSTree(node: ts.Node) {
     console.log(new Array(depth + 1).fill('--').join('') + ' ' + ts.SyntaxKind[node.kind])
     return false
   })
+}
+
+export function createImportStatement(clause: string, file: string) {
+  return ts.factory.createImportDeclaration(
+    undefined,
+    undefined,
+    ts.factory.createImportClause(false, ts.factory.createIdentifier(clause), undefined),
+    ts.factory.createStringLiteral(file),
+  )
+}
+
+export function createNamedImports(imports: ById<string[]>) {
+  return Object.keys(imports).map((fileName: string) => {
+    const uniqueImports = Object.values(
+      Object.fromEntries((imports as any)[fileName].map((imp: string) => [imp, imp])),
+    )
+    return createNamedImportStatement(uniqueImports, fileName)
+  })
+}
+
+export function createNamedImportStatement(imports: string[], file: string) {
+  return ts.factory.createImportDeclaration(
+    undefined,
+    undefined,
+    ts.factory.createImportClause(
+      false,
+      undefined,
+      ts.factory.createNamedImports(
+        imports.map(importItem =>
+          ts.factory.createImportSpecifier(undefined, ts.factory.createIdentifier(importItem)),
+        ),
+      ),
+    ),
+    ts.factory.createStringLiteral(file),
+  )
+}
+
+export function createGQLQuery(query: string, variableName = 'query') {
+  return ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier(variableName),
+          undefined,
+          undefined,
+          ts.factory.createTaggedTemplateExpression(
+            ts.factory.createIdentifier('gql'),
+            undefined,
+            ts.factory.createNoSubstitutionTemplateLiteral(query),
+          ),
+        ),
+      ],
+      ts.NodeFlags.Const,
+    ),
+  )
+}
+
+export function createType(type: string, isArray: boolean, allowUndefined?: boolean) {
+  const jsType = (GQLTypeToJSType as any)[type as string]
+  let targetType = jsType
+    ? ts.factory.createKeywordTypeNode(jsType)
+    : ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(type as string), undefined)
+
+  if (isArray) {
+    targetType = ts.factory.createArrayTypeNode(targetType)
+  }
+
+  if (allowUndefined) {
+    return ts.factory.createUnionTypeNode([
+      targetType,
+      ts.factory.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword),
+    ])
+  }
+  return targetType
+}
+
+export function createInterface({ name, fields }: GQLType, allowUndefined?: boolean) {
+  return ts.factory.createInterfaceDeclaration(
+    undefined,
+    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    ts.factory.createIdentifier(name),
+    undefined,
+    undefined,
+    fields.map(field => {
+      return ts.factory.createPropertySignature(
+        undefined,
+        ts.factory.createIdentifier(field.name),
+        field.isNonNull ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        createType(field.type as string, !!field.isArray, allowUndefined),
+      )
+    }),
+  )
 }

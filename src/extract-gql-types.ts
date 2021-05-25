@@ -1,6 +1,11 @@
 import * as gql from 'graphql'
 import { toClassName } from 'name-util'
-import { findField as findNullableField, findObjectType, isScalarType } from './graphql-util'
+import {
+  findField as findNullableField,
+  findInputType,
+  findObjectType,
+  isScalarType,
+} from './graphql-util'
 import { ById, md5Hex } from './util'
 
 interface GQLField {
@@ -20,6 +25,7 @@ interface GQLType {
 interface Context {
   schema: gql.DocumentNode
   path: string[]
+  isInput?: boolean
 }
 
 interface DeduplicateContext {
@@ -49,7 +55,7 @@ function extractGQLFieldType(
   context: Context,
 ): GQLField {
   if (typeDef.kind === 'NamedType') {
-    if (!isScalarType(typeDef.name.value) && selectionSet) {
+    if (!isScalarType(typeDef.name.value)) {
       const type = extractGQLType(typeDef.name.value, selectionSet, context)
       return { name, type }
     }
@@ -63,18 +69,18 @@ function extractGQLFieldType(
 }
 
 function extractGQLField(
-  field: gql.SelectionNode | gql.FieldDefinitionNode,
+  field: gql.SelectionNode | gql.FieldDefinitionNode | gql.InputValueDefinitionNode,
   parentObjectDef: gql.ObjectTypeDefinitionNode,
   context: Context,
 ): GQLField {
-  if (field.kind !== gql.Kind.FIELD) {
+  if (field.kind !== gql.Kind.FIELD && field.kind !== gql.Kind.INPUT_VALUE_DEFINITION) {
     throw new Error('Invalid field!')
   }
   const fieldDef = findField(parentObjectDef, field.name.value, context)
   return extractGQLFieldType(
     field.name.value,
     fieldDef.type,
-    field.selectionSet,
+    field.kind !== gql.Kind.INPUT_VALUE_DEFINITION ? field.selectionSet : undefined,
     nextContext(context, field.name.value),
   )
 }
@@ -84,25 +90,26 @@ function extractGQLType(
   selectionSet: gql.SelectionSetNode | undefined,
   context: Context,
 ): GQLType {
-  const objectDef = findObjectType(context.schema, toClassName(name))
-  return {
-    name: toClassName(`${name}-type`),
-    path: context.path,
-    fields: selectionSet
-      ? selectionSet.selections.map(field => extractGQLField(field, objectDef, context))
-      : objectDef.fields?.map(field => extractGQLField(field, objectDef, context)) ?? [],
-  }
+  const objectDef = context?.isInput
+    ? findInputType(context.schema, toClassName(name))
+    : findObjectType(context.schema, toClassName(name))
+  const fields = selectionSet
+    ? selectionSet.selections.map(field => extractGQLField(field, objectDef, context))
+    : objectDef.fields?.map(field => extractGQLField(field, objectDef, context)) ?? []
+  return { name: toClassName(`${name}-type`), path: context.path, fields }
 }
 
-function extractRequestType(def: gql.OperationDefinitionNode, context: Context): GQLType {
-  return {
-    name: 'RequestType',
-    path: context.path,
-    fields:
-      def.variableDefinitions?.map(variableDef =>
-        extractGQLFieldType(variableDef.variable.name.value, variableDef.type, undefined, context),
-      ) ?? [],
-  }
+function extractInputType(def: gql.OperationDefinitionNode, context: Context): GQLType {
+  const fields =
+    def.variableDefinitions?.map(variableDef =>
+      extractGQLFieldType(
+        variableDef.variable.name.value,
+        variableDef.type,
+        undefined,
+        nextContext(context, variableDef.variable.name.value),
+      ),
+    ) ?? []
+  return { name: 'RequestType', path: context.path, fields }
 }
 
 function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {
@@ -162,7 +169,7 @@ export function extractGQLTypes(
   const context = { schema, path: [] }
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
     const gqlTypes = [
-      extractRequestType(def, nextContext(context, 'variables')),
+      extractInputType(def, nextContext({ ...context, isInput: true }, 'variables')),
       extractGQLType(def.operation, def.selectionSet, nextContext(context, def.operation)),
     ]
     return deduplicateGQLTypes(gqlTypes)

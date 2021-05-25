@@ -34,8 +34,15 @@ export function findObjectType(schema: DocumentNode, type: string) {
   return required(def, `Count not found "type ${toClassName(type)}" in your schema`)
 }
 
+export function findInputType(schema: DocumentNode, type: string) {
+  const def = schema.definitions.find(
+    def => def.kind === gql.Kind.INPUT_OBJECT_TYPE_DEFINITION && def.name.value === type,
+  ) as gql.ObjectTypeDefinitionNode
+  return required(def, `Count not found "input ${toClassName(type)}" in your schema`)
+}
+
 export function findField(def: gql.ObjectTypeDefinitionNode, name: string) {
-  return def.fields?.find(def => def.kind === gql.Kind.FIELD_DEFINITION && def.name.value === name)
+  return def.fields?.find(def => def.name.value === name)
 }
 
 export function findOperation(schema: DocumentNode) {

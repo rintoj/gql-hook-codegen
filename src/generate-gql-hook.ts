@@ -3,23 +3,20 @@ import * as gql from 'graphql'
 import { toCamelCase, toClassName } from 'name-util'
 import { format } from 'prettier'
 import * as ts from 'typescript'
+import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
 import { parseTS, printTS, selectTSNode } from './typescript-util'
-import { ById } from './util'
+import { ById, reduceToFlatArray } from './util'
 
 const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 
-interface Property {
-  name: string
-  type: string
-  isRequired: boolean
-}
-
-enum TypeToKeyword {
-  'string' = ts.SyntaxKind.StringKeyword,
-  'number' = ts.SyntaxKind.NumberKeyword,
-  'boolean' = ts.SyntaxKind.BooleanKeyword,
+enum GQLTypeToJSType {
+  'ID' = ts.SyntaxKind.StringKeyword,
+  'String' = ts.SyntaxKind.StringKeyword,
+  'Int' = ts.SyntaxKind.NumberKeyword,
+  'Float' = ts.SyntaxKind.NumberKeyword,
+  'Boolean' = ts.SyntaxKind.BooleanKeyword,
 }
 
 interface Context {
@@ -73,23 +70,23 @@ function createGQLQuery(query: string, variableName = 'query') {
   )
 }
 
-function createInterface(name: string, properties: Property[]) {
+function createInterface({ name, fields }: GQLType) {
   return ts.factory.createInterfaceDeclaration(
     undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     ts.factory.createIdentifier(name),
     undefined,
     undefined,
-    properties.map(property => {
-      const type = (TypeToKeyword as any)[property.type]
+    fields.map(field => {
+      const type = (GQLTypeToJSType as any)[field.type as string]
       return ts.factory.createPropertySignature(
         undefined,
-        ts.factory.createIdentifier(property.name),
-        property.isRequired ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createIdentifier(field.name),
+        field.isNonNull ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
         type
           ? ts.factory.createKeywordTypeNode(type)
           : ts.factory.createTypeReferenceNode(
-              ts.factory.createIdentifier(property.type),
+              ts.factory.createIdentifier(field.type as string),
               undefined,
             ),
       )
@@ -98,23 +95,23 @@ function createInterface(name: string, properties: Property[]) {
 }
 
 function createHook({
-  name,
-  requestType,
+  hookName,
   responseType,
-  reactHook,
-  variable,
+  reactHookName,
+  gqlVariableName,
+  requiredRequestVariables,
 }: {
-  name: string
-  requestType: string
+  hookName: string
   responseType: string
-  reactHook: string
-  variable: string
+  reactHookName: string
+  gqlVariableName: string
+  requiredRequestVariables: string[]
 }) {
   return ts.factory.createFunctionDeclaration(
     undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
-    ts.factory.createIdentifier(name),
+    ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
@@ -123,7 +120,7 @@ function createHook({
         undefined,
         ts.factory.createIdentifier('request'),
         undefined,
-        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(requestType), undefined),
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('RequestType'), undefined),
         undefined,
       ),
     ],
@@ -132,10 +129,10 @@ function createHook({
       [
         ts.factory.createReturnStatement(
           ts.factory.createCallExpression(
-            ts.factory.createIdentifier(reactHook),
+            ts.factory.createIdentifier(reactHookName),
             [
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier(requestType),
+                ts.factory.createIdentifier('RequestType'),
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
@@ -144,29 +141,49 @@ function createHook({
               ),
             ],
             [
-              ts.factory.createIdentifier(variable),
+              ts.factory.createIdentifier(gqlVariableName),
               ts.factory.createIdentifier('request'),
-              ts.factory.createObjectLiteralExpression(
-                [
-                  ts.factory.createPropertyAssignment(
-                    ts.factory.createIdentifier('skip'),
-                    ts.factory.createPrefixUnaryExpression(
-                      ts.SyntaxKind.ExclamationToken,
-                      ts.factory.createPropertyAccessExpression(
-                        ts.factory.createIdentifier('request'),
-                        ts.factory.createIdentifier('id'),
-                      ),
-                    ),
-                  ),
-                ],
-                false,
-              ),
-            ],
+              createSkip(requiredRequestVariables),
+            ].filter(i => !!i) as ts.Expression[],
           ),
         ),
       ],
       true,
     ),
+  )
+}
+
+function createSkip(requiredVariables: string[]) {
+  if (requiredVariables.length === 0) {
+    return undefined
+  }
+  const firstVariable = ts.factory.createPrefixUnaryExpression(
+    ts.SyntaxKind.ExclamationToken,
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('request'),
+      ts.factory.createIdentifier(requiredVariables[0]),
+    ),
+  )
+  return ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier('skip'),
+        requiredVariables.slice(1).reduce((a, i) => {
+          return ts.factory.createBinaryExpression(
+            a,
+            ts.factory.createToken(ts.SyntaxKind.BarBarToken),
+            ts.factory.createPrefixUnaryExpression(
+              ts.SyntaxKind.ExclamationToken,
+              ts.factory.createPropertyAccessExpression(
+                ts.factory.createIdentifier('request'),
+                ts.factory.createIdentifier(i),
+              ),
+            ),
+          )
+        }, firstVariable as ts.Expression),
+      ),
+    ],
+    false,
   )
 }
 
@@ -206,46 +223,65 @@ function extractGQL(query: string) {
   }
 }
 
-export function generateUseHook({
-  schema,
-  operation,
-  variable,
-  selection,
-  context,
-}: {
-  schema: gql.DocumentNode
-  operation: string
-  variable: string
-  selection: gql.FieldNode
-  context: Context
-}) {
-  const name = selection.name.value
-  const reactHook = toCamelCase(`use-${operation}`)
-  const hookName = toCamelCase(`use-${name}-${operation}`)
-  const requestName = toClassName(`${name}-${operation}-request`)
-  const responseName = toClassName(`${name}-${operation}-response`)
-
-  const imports = context.imports['@apollo/react'] ?? (context.imports['@apollo/react'] = [])
-  imports.push(reactHook)
-
-  return [
-    createInterface('User', [{ name: 'name', type: 'string', isRequired: false }]),
-    createInterface(requestName, [{ name: 'id', type: 'string', isRequired: true }]),
-    createInterface(responseName, [{ name: 'user', type: 'User', isRequired: false }]),
-    createHook({
-      name: hookName,
-      requestType: requestName,
-      responseType: responseName,
-      reactHook,
-      variable,
-    }),
-  ]
+function createNamedImports(context: Context) {
+  return Object.keys(context.imports).map((fileName: string) => {
+    const imports = (context.imports as any)[fileName]
+    const uniqueImports = Object.values(
+      Object.fromEntries(imports.map((imp: string) => [imp, imp])),
+    )
+    return createNamedImportStatement(uniqueImports, fileName)
+  })
 }
 
-export function createNamedImports(context: Context) {
-  return Object.keys(context.imports).map((fileName: string) => {
-    return createNamedImportStatement((context.imports as any)[fileName], fileName)
-  })
+function generateUniqueName(def: gql.OperationDefinitionNode) {
+  return def.selectionSet.selections
+    .map(field => {
+      if (field.kind === gql.Kind.FIELD) {
+        return toClassName(field.name.value)
+      }
+    })
+    .filter(name => !!name)
+    .join('And')
+}
+
+function findRequiredRequestVariables(dataTypes: GQLType[]) {
+  const request = dataTypes.find(dataType => dataType.name === 'RequestType')
+  return request?.fields.filter(field => field.isNonNull).map(field => field.name) ?? []
+}
+
+function generateHookForOperation(
+  schema: gql.DocumentNode,
+  def: gql.DefinitionNode,
+  gqlVariableName: string,
+  context: Context,
+) {
+  if (def.kind === gql.Kind.OPERATION_DEFINITION) {
+    const dataTypes = extractGQLTypes(schema, def)
+    const requiredRequestVariables = findRequiredRequestVariables(dataTypes)
+    const statements = dataTypes.map(dataType => {
+      if (dataType.type === GQLObjectType.INTERFACE) {
+        return createInterface(dataType)
+      }
+    })
+
+    const name = generateUniqueName(def)
+    const reactHookName = toCamelCase(`use-${def.operation}`)
+    const hookName = toCamelCase(`use-${name}-${def.operation}`)
+    const responseType = toClassName(`${def.operation}-type`)
+
+    const imports = context.imports['@apollo/react'] ?? (context.imports['@apollo/react'] = [])
+    imports.push(reactHookName)
+
+    const hookStatement = createHook({
+      hookName,
+      responseType,
+      reactHookName,
+      gqlVariableName,
+      requiredRequestVariables,
+    })
+    return [...statements, hookStatement]
+  }
+  return []
 }
 
 export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): string {
@@ -254,27 +290,10 @@ export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): st
   const requestDoc = parseSchema(fixedQuery)
   const context = { imports: {} }
 
-  const statements = requestDoc.definitions.reduce((statements, def) => {
-    if (def.kind === gql.Kind.OPERATION_DEFINITION) {
-      return [
-        ...statements,
-        ...def.selectionSet.selections.reduce(
-          (a, selectionSet) => [
-            ...a,
-            ...generateUseHook({
-              schema,
-              operation: def.operation,
-              variable: request.variable,
-              selection: selectionSet as gql.FieldNode,
-              context,
-            }),
-          ],
-          [] as ts.Statement[],
-        ),
-      ]
-    }
-    return statements
-  }, [] as ts.Statement[])
+  const statements: ts.Statement[] = reduceToFlatArray(
+    requestDoc.definitions as gql.DefinitionNode[],
+    def => generateHookForOperation(schema, def, request.variable, context),
+  ) as any
 
   return createTSContent([
     createImportStatement('gql', 'graphql-tag'),

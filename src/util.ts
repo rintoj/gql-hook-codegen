@@ -21,3 +21,29 @@ export interface ById<T> {
 export function md5Hex(data: string) {
   return crypto.createHash('md5').update(data).digest('hex')
 }
+
+export function reduceToArray<A, T>(
+  array: A[] | undefined,
+  mapper: (item: A, index: number) => T,
+  initial: T[] = [],
+) {
+  return (
+    array?.reduce(
+      (accumulator: T[], item: A, index: number): T[] => [...accumulator, mapper(item, index)],
+      initial,
+    ) ?? []
+  )
+}
+
+export function reduceToFlatArray<A, T>(
+  array: A[] | undefined,
+  mapper: (item: A, index: number) => T[],
+  initial: T[] = [],
+) {
+  return (
+    array?.reduce(
+      (accumulator: T[], item: A, index: number): T[] => [...accumulator, ...mapper(item, index)],
+      initial,
+    ) ?? []
+  )
+}

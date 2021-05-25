@@ -3,22 +3,22 @@ import { toClassName } from 'name-util'
 import { findField as findNullableField, findSchemaType, isScalarType } from './graphql-util'
 import { ById, md5Hex } from './util'
 
-interface GQLField {
+export interface GQLField {
   name: string
   type: string | GQLType
   isNonNull?: boolean
   isArray?: boolean
 }
 
-enum GQLTargetType {
+export enum GQLObjectType {
   INTERFACE = 'INTERFACE',
   ENUM = 'ENUM',
 }
 
-interface GQLType {
+export interface GQLType {
   id?: string
   name: string
-  type: GQLTargetType
+  type: GQLObjectType
   path: string[]
   fields: GQLField[]
 }
@@ -99,7 +99,7 @@ function extractGQLField(
 function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context): GQLType {
   return {
     name: objectDef.name.value,
-    type: GQLTargetType.ENUM,
+    type: GQLObjectType.ENUM,
     path: context.path,
     fields:
       objectDef.values?.map(
@@ -130,7 +130,7 @@ function extractGQLType(
       ) ?? []
   return {
     name: toClassName(`${name}-type`),
-    type: GQLTargetType.INTERFACE,
+    type: GQLObjectType.INTERFACE,
     path: context.path,
     fields,
   }
@@ -146,7 +146,7 @@ function extractInputType(def: gql.OperationDefinitionNode, context: Context): G
         nextContext(context, variableDef.variable.name.value),
       ),
     ) ?? []
-  return { name: 'RequestType', type: GQLTargetType.INTERFACE, path: context.path, fields }
+  return { name: 'RequestType', type: GQLObjectType.INTERFACE, path: context.path, fields }
 }
 
 function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {

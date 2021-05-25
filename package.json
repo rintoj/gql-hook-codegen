@@ -5,6 +5,7 @@
   "main": "lib/index.ts",
   "scripts": {
     "build": "rimraf lib && tsc",
+    "lint": "eslint . --fix",
     "test": "jest",
     "semantic-release": "semantic-release"
   },

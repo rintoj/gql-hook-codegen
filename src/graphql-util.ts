@@ -66,7 +66,9 @@ export function findField(
   def: gql.ObjectTypeDefinitionNode | gql.InputObjectTypeDefinitionNode,
   name: string,
 ) {
-  return def.fields?.find(def => def.name.value === name)
+  return (def as any).fields?.find(
+    (def: gql.FieldDefinitionNode | gql.InputValueDefinitionNode) => def.name.value === name,
+  )
 }
 
 export function findOperation(schema: DocumentNode) {

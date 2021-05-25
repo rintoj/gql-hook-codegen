@@ -7,6 +7,7 @@ import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
 import {
+  createEnum,
   createGQLQuery,
   createImportStatement,
   createInterface,
@@ -180,6 +181,8 @@ function generateHookForOperation(
     const statements = dataTypes.map(dataType => {
       if (dataType.type === GQLObjectType.INTERFACE) {
         return createInterface(dataType, dataType.name === 'RequestType')
+      } else if (dataType.type === GQLObjectType.ENUM) {
+        return createEnum(dataType)
       }
     })
 
@@ -198,7 +201,7 @@ function generateHookForOperation(
       gqlVariableName,
       requiredRequestVariables,
     })
-    return [...statements, hookStatement]
+    return [...statements, hookStatement].filter(i => !!i)
   }
   return []
 }

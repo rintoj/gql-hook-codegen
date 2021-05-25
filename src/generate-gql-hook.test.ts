@@ -155,4 +155,57 @@ describe('generateGQLHook', () => {
     `),
     )
   })
+
+  test('should generate query and its types with enum', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query {
+          user {
+            id
+            status
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { useQuery } from '@apollo/react'
+
+        const query = gql\`
+          query ($id: ID!) {
+            user(id: $id) {
+              id
+              status
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+        }
+
+        export interface QueryType {
+          user?: UserType
+        }
+
+        export interface UserType {
+          id: string
+          status?: UserStatus
+        }
+
+        export enum UserStatus {
+          ACTIVE = 'ACTIVE',
+          INACTIVE = 'INACTIVE',
+        }
+
+        export function useUserQuery(request: RequestType) {
+          return useQuery<RequestType, QueryType>(query, request, { skip: !request.id })
+        }
+    `),
+    )
+  })
 })

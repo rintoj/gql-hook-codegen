@@ -8,6 +8,7 @@ import {
   inputValueDefToVariable,
   inputValueDefToVariableDef,
   isScalarType,
+  findSchemaType,
 } from './graphql-util'
 
 interface Context {
@@ -68,7 +69,7 @@ function parseSelection(
     }
     const type = findDeepType(targetField.type)
     const scalar = isScalarType(type)
-    const objectType = !scalar ? findObjectType(initialContext.schema, type) : undefined
+    const objectType = !scalar ? findSchemaType(initialContext.schema, type) : undefined
     const context = !scalar
       ? { ...initialContext, path: [...initialContext.path, queryName] }
       : initialContext
@@ -83,7 +84,7 @@ function parseSelection(
       variableMap,
     )
     const selectionSet =
-      selection.selectionSet && objectType
+      selection.selectionSet && objectType?.kind === gql.Kind.OBJECT_TYPE_DEFINITION
         ? parseSelectionSet(selection.selectionSet, objectType, context)
         : undefined
     return {
@@ -121,10 +122,6 @@ function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
 }
 
 export function fixGQLRequest(schema: DocumentNode, query: string) {
-  try {
-    const newQuery = gql.parse(query).definitions.map(def => parseOperationDef(schema, def))
-    return newQuery.map(q => gql.print(q)).join('\n')
-  } catch (e) {
-    throw new Error(`Failed to process ${query}${e.message}`)
-  }
+  const newQuery = gql.parse(query).definitions.map(def => parseOperationDef(schema, def))
+  return newQuery.map(q => gql.print(q)).join('\n')
 }

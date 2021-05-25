@@ -255,3 +255,17 @@ export function createInterface({ name, fields }: GQLType, allowUndefined?: bool
     }),
   )
 }
+
+export function createEnum({ name, fields }: GQLType) {
+  return ts.factory.createEnumDeclaration(
+    undefined,
+    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    ts.factory.createIdentifier(name),
+    fields.map(field =>
+      ts.factory.createEnumMember(
+        ts.factory.createIdentifier(field.name),
+        ts.factory.createStringLiteral(field.type as string),
+      ),
+    ),
+  )
+}

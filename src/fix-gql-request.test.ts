@@ -311,4 +311,26 @@ describe('fixGQLRequest', () => {
       `),
     )
   })
+
+  test('should work with enums', () => {
+    const query = `
+      query {
+        user {
+          id
+          status
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(trimPadding(fixedQuery)).toEqual(
+      trimPadding(`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            status
+          }
+        }
+      `),
+    )
+  })
 })

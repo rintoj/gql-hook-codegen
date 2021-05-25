@@ -35,7 +35,7 @@ function createHook({
   responseType: string
   reactHookName: string
   gqlVariableName: string
-  requiredRequestVariables: string[]
+  requiredRequestVariables: string[] | undefined
 }) {
   return ts.factory.createFunctionDeclaration(
     undefined,
@@ -73,7 +73,7 @@ function createHook({
             [
               ts.factory.createIdentifier(gqlVariableName),
               ts.factory.createIdentifier('request'),
-              createSkip(requiredRequestVariables),
+              requiredRequestVariables ? createSkip(requiredRequestVariables) : undefined,
             ].filter(i => !!i) as ts.Expression[],
           ),
         ),
@@ -176,22 +176,24 @@ function generateHookForOperation(
   context: Context,
 ) {
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
+    const name = generateUniqueName(def)
+    const operation = def.operation
+    const reactHookName = toCamelCase(`use-${operation}`)
+    const hookName = toCamelCase(`use-${name}-${operation}`)
+    const responseType = toClassName(`${operation}-type`)
     const dataTypes = extractGQLTypes(schema, def)
-    const requiredRequestVariables = findRequiredRequestVariables(dataTypes)
+    const requiredRequestVariables =
+      operation === 'query' ? findRequiredRequestVariables(dataTypes) : undefined
+
     const statements = dataTypes.map(dataType => {
       if (dataType.type === GQLObjectType.INTERFACE) {
-        return createInterface(dataType, dataType.name === 'RequestType')
+        return createInterface(dataType, dataType.name === 'RequestType' && operation === 'query')
       } else if (dataType.type === GQLObjectType.ENUM) {
         return createEnum(dataType)
       }
     })
 
-    const name = generateUniqueName(def)
-    const reactHookName = toCamelCase(`use-${def.operation}`)
-    const hookName = toCamelCase(`use-${name}-${def.operation}`)
-    const responseType = toClassName(`${def.operation}-type`)
-
-    const imports = context.imports['@apollo/react'] ?? (context.imports['@apollo/react'] = [])
+    const imports = context.imports['@apollo/client'] ?? (context.imports['@apollo/client'] = [])
     imports.push(reactHookName)
 
     const hookStatement = createHook({
@@ -220,7 +222,7 @@ export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): st
   return createTSContent([
     createImportStatement('gql', 'graphql-tag'),
     ...createNamedImports(context.imports),
-    createGQLQuery(fixedQuery),
+    createGQLQuery(fixedQuery, request.variable),
     ...statements,
   ])
 }

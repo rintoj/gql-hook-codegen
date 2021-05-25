@@ -21,7 +21,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/react'
+        import { useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!) {
@@ -70,7 +70,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/react'
+        import { useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!, $tweetId: ID!) {
@@ -126,7 +126,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/react'
+        import { useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!, $limit: Int) {
@@ -173,7 +173,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/react'
+        import { useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!) {
@@ -204,6 +204,56 @@ describe('generateGQLHook', () => {
 
         export function useUserQuery(request: RequestType) {
           return useQuery<RequestType, QueryType>(query, request, { skip: !request.id })
+        }
+    `),
+    )
+  })
+
+  test('should generate mutation and its types', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const mutation = gql\`
+        mutation {
+          registerUser {
+            id
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { useMutation } from '@apollo/client'
+
+        const mutation = gql\`
+          mutation ($input: RegisterUserInput!) {
+            registerUser(input: $input) {
+              id
+            }
+          }
+        \`
+
+        export interface RequestType {
+          input: RegisterUserInputType
+        }
+
+        export interface RegisterUserInputType {
+          name: string
+          email: string
+        }
+
+        export interface MutationType {
+          registerUser: UserType
+        }
+
+        export interface UserType {
+          id: string
+        }
+
+        export function useRegisterUserMutation(request: RequestType) {
+          return useMutation<RequestType, MutationType>(mutation, request)
         }
     `),
     )

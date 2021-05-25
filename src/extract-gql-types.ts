@@ -50,7 +50,11 @@ function findField(
 ) {
   const nullableField = findNullableField(objectDef, fieldName)
   if (!nullableField) {
-    throw new Error(`Invalid field: "${[...context.path, fieldName].join('.')}"`)
+    throw new Error(
+      `Invalid field: "${[...context.path, fieldName].join('.')}" - no such field exists in "${
+        context.isInput ? 'input' : 'type'
+      } ${objectDef.name.value}"`,
+    )
   }
   return nullableField
 }

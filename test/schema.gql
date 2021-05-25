@@ -3,6 +3,12 @@ enum UserStatus {
   INACTIVE
 }
 
+type Tweet {
+  id: ID!
+  content: String!
+  author: User!
+}
+
 type User {
   id: ID!
   name: String
@@ -21,6 +27,7 @@ input RegisterUserInput {
 
 type Query {
   user(id: ID!): User
+  tweet(id: ID!): Tweet
   followers(id: ID!, limit: Int): [User]!
 }
 

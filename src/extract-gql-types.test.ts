@@ -274,4 +274,116 @@ describe('extractGQLTypes', () => {
       },
     ])
   })
+
+  test('should extract types from multiple queries', () => {
+    const request: any = parseSchema(`
+      query ($tweetId: ID!, $userId: ID!) {
+        tweet(tweetId: $tweetId) {
+          id
+          author {
+            id
+            name
+          }
+        }
+        user(id: $userId) {
+          id
+          name
+        }
+      }
+    `)
+    const types = extractGQLTypes(schema, request.definitions[0])
+    expect(types).toEqual([
+      {
+        name: 'RequestType',
+        type: 'INTERFACE',
+        path: ['variables'],
+        fields: [
+          {
+            name: 'tweetId',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'userId',
+            type: 'ID',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'QueryType',
+        type: 'INTERFACE',
+        path: ['query'],
+        fields: [
+          {
+            name: 'tweet',
+            type: 'TweetType',
+          },
+          {
+            name: 'user',
+            type: 'UserType',
+          },
+        ],
+      },
+      {
+        name: 'TweetType',
+        type: 'INTERFACE',
+        path: ['query', 'tweet'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'author',
+            type: 'UserType',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'UserType',
+        type: 'INTERFACE',
+        path: ['query', 'user'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'name',
+            type: 'String',
+          },
+        ],
+      },
+    ])
+  })
+
+  test('should throw an error if an invalid query is used in the request', () => {
+    const request: any = parseSchema(`
+      query ($tweetId: ID!, $userId: ID!) {
+        invalid(tweetId: $tweetId) {
+          id
+        }
+      }
+    `)
+    expect(() => extractGQLTypes(schema, request.definitions[0])).toThrowError(
+      'Invalid field: "query.invalid" - no such field exists in "type Query"',
+    )
+  })
+
+  test('should throw an error if an invalid field is used in the request', () => {
+    const request: any = parseSchema(`
+      query ($tweetId: ID!, $userId: ID!) {
+        user(tweetId: $tweetId) {
+          invalid
+        }
+      }
+    `)
+    expect(() => extractGQLTypes(schema, request.definitions[0])).toThrowError(
+      'Invalid field: "query.user.invalid" - no such field exists in "type User"',
+    )
+  })
 })

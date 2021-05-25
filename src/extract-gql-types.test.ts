@@ -16,6 +16,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        type: 'INTERFACE',
         path: ['variables'],
         fields: [
           {
@@ -27,6 +28,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        type: 'INTERFACE',
         path: ['query'],
         fields: [
           {
@@ -37,6 +39,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [
           {
@@ -65,6 +68,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        type: 'INTERFACE',
         path: ['variables'],
         fields: [
           {
@@ -80,6 +84,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        type: 'INTERFACE',
         path: ['query'],
         fields: [
           {
@@ -90,6 +95,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [
           {
@@ -107,6 +113,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'FollowersUserType',
+        type: 'INTERFACE',
         path: ['query', 'user', 'followers'],
         fields: [
           {
@@ -136,6 +143,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        type: 'INTERFACE',
         path: ['variables'],
         fields: [
           {
@@ -147,6 +155,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'RegisterUserInputType',
+        type: 'INTERFACE',
         path: ['variables', 'input'],
         fields: [
           {
@@ -163,6 +172,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'MutationType',
+        type: 'INTERFACE',
         path: ['mutation'],
         fields: [
           {
@@ -174,6 +184,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        type: 'INTERFACE',
         path: ['mutation', 'registerUser'],
         fields: [
           {
@@ -184,6 +195,80 @@ describe('extractGQLTypes', () => {
           {
             name: 'name',
             type: 'String',
+          },
+        ],
+      },
+    ])
+  })
+
+  test('should extract enum types', () => {
+    const request: any = parseSchema(`
+      mutation ($id: ID!, $status: UserStatus!) {
+        setUserStatus(id: $id, status: $status) {
+          id
+          status
+        }
+      }
+    `)
+    const types = extractGQLTypes(schema, request.definitions[0])
+    expect(types).toEqual([
+      {
+        name: 'RequestType',
+        type: 'INTERFACE',
+        path: ['variables'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'status',
+            type: 'UserStatus',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'UserStatus',
+        type: 'ENUM',
+        path: ['mutation', 'setUserStatus', 'status'],
+        fields: [
+          {
+            name: 'ACTIVE',
+            type: 'ACTIVE',
+          },
+          {
+            name: 'INACTIVE',
+            type: 'INACTIVE',
+          },
+        ],
+      },
+      {
+        name: 'MutationType',
+        type: 'INTERFACE',
+        path: ['mutation'],
+        fields: [
+          {
+            name: 'setUserStatus',
+            type: 'UserType',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'UserType',
+        type: 'INTERFACE',
+        path: ['mutation', 'setUserStatus'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'status',
+            type: 'UserStatus',
           },
         ],
       },

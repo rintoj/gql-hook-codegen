@@ -41,7 +41,31 @@ export function findInputType(schema: DocumentNode, type: string) {
   return required(def, `Count not found "input ${toClassName(type)}" in your schema`)
 }
 
-export function findField(def: gql.ObjectTypeDefinitionNode, name: string) {
+export function findEnumType(schema: DocumentNode, type: string) {
+  return schema.definitions.find(
+    def => def.kind === gql.Kind.ENUM_TYPE_DEFINITION && def.name.value === type,
+  ) as gql.EnumTypeDefinitionNode | undefined
+}
+
+export function findSchemaType(schema: DocumentNode, type: string) {
+  const kinds = [
+    gql.Kind.OBJECT_TYPE_DEFINITION,
+    gql.Kind.INPUT_OBJECT_TYPE_DEFINITION,
+    gql.Kind.ENUM_TYPE_DEFINITION,
+  ]
+  return schema.definitions.find(
+    (def: any) => kinds.includes(def.kind) && def.name.value === type,
+  ) as
+    | gql.ObjectTypeDefinitionNode
+    | gql.InputObjectTypeDefinitionNode
+    | gql.EnumTypeDefinitionNode
+    | undefined
+}
+
+export function findField(
+  def: gql.ObjectTypeDefinitionNode | gql.InputObjectTypeDefinitionNode,
+  name: string,
+) {
   return def.fields?.find(def => def.name.value === name)
 }
 

@@ -1,9 +1,15 @@
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
 type User {
   id: ID!
   name: String
   email: String
   isRegistered: Boolean
   numberOfFollowers: Int
+  status: UserStatus
   follower(id: ID!): User
   followers(limit: Int): [User]!
 }
@@ -20,6 +26,7 @@ type Query {
 
 type Mutation {
   registerUser(input: RegisterUserInput!): User!
+  setUserStatus(id: ID!, status: UserStatus!): User!
 }
 
 type Subscription {

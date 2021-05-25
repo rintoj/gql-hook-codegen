@@ -1,11 +1,6 @@
 import * as gql from 'graphql'
 import { toClassName } from 'name-util'
-import {
-  findField as findNullableField,
-  findInputType,
-  findObjectType,
-  isScalarType,
-} from './graphql-util'
+import { findField as findNullableField, findSchemaType, isScalarType } from './graphql-util'
 import { ById, md5Hex } from './util'
 
 interface GQLField {
@@ -15,9 +10,15 @@ interface GQLField {
   isArray?: boolean
 }
 
+enum GQLTargetType {
+  INTERFACE = 'INTERFACE',
+  ENUM = 'ENUM',
+}
+
 interface GQLType {
   id?: string
   name: string
+  type: GQLTargetType
   path: string[]
   fields: GQLField[]
 }
@@ -33,17 +34,23 @@ interface DeduplicateContext {
 }
 
 function generateGQLTypeId(item: GQLType) {
-  return md5Hex([item.name, '<>', ...Array.from(new Set(item.fields)).sort()].join(':'))
+  return md5Hex(
+    [item.name, '<>', ...Array.from(new Set(item.fields.map(({ name }) => name))).sort()].join(':'),
+  )
 }
 
 function nextContext(context: Context, path: string) {
   return { ...context, path: [...context.path, path] }
 }
 
-function findField(objectDef: gql.ObjectTypeDefinitionNode, fieldName: string, context: Context) {
+function findField(
+  objectDef: gql.ObjectTypeDefinitionNode | gql.InputObjectTypeDefinitionNode,
+  fieldName: string,
+  context: Context,
+) {
   const nullableField = findNullableField(objectDef, fieldName)
   if (!nullableField) {
-    throw new Error(`Invalid field: "${[context.path, fieldName].join('.')}"`)
+    throw new Error(`Invalid field: "${[...context.path, fieldName].join('.')}"`)
   }
   return nullableField
 }
@@ -70,7 +77,7 @@ function extractGQLFieldType(
 
 function extractGQLField(
   field: gql.SelectionNode | gql.FieldDefinitionNode | gql.InputValueDefinitionNode,
-  parentObjectDef: gql.ObjectTypeDefinitionNode,
+  parentObjectDef: gql.ObjectTypeDefinitionNode | gql.InputObjectTypeDefinitionNode,
   context: Context,
 ): GQLField {
   if (field.kind !== gql.Kind.FIELD && field.kind !== gql.Kind.INPUT_VALUE_DEFINITION) {
@@ -85,18 +92,44 @@ function extractGQLField(
   )
 }
 
+function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context): GQLType {
+  return {
+    name: objectDef.name.value,
+    type: GQLTargetType.ENUM,
+    path: context.path,
+    fields:
+      objectDef.values?.map(
+        (value): GQLField => ({
+          name: value.name.value,
+          type: value.name.value,
+        }),
+      ) ?? [],
+  }
+}
+
 function extractGQLType(
   name: string,
   selectionSet: gql.SelectionSetNode | undefined,
   context: Context,
 ): GQLType {
-  const objectDef = context?.isInput
-    ? findInputType(context.schema, toClassName(name))
-    : findObjectType(context.schema, toClassName(name))
+  const def = findSchemaType(context.schema, toClassName(name))
+  if (!def) {
+    throw new Error(`Invalid type: "${name}" found at "${context.path.join('.')}"`)
+  }
+  if (def.kind === gql.Kind.ENUM_TYPE_DEFINITION) {
+    return extractEnumType(def, context)
+  }
   const fields = selectionSet
-    ? selectionSet.selections.map(field => extractGQLField(field, objectDef, context))
-    : objectDef.fields?.map(field => extractGQLField(field, objectDef, context)) ?? []
-  return { name: toClassName(`${name}-type`), path: context.path, fields }
+    ? selectionSet.selections.map(field => extractGQLField(field, def, context))
+    : def.fields?.map((field: gql.FieldDefinitionNode | gql.InputValueDefinitionNode) =>
+        extractGQLField(field, def, context),
+      ) ?? []
+  return {
+    name: toClassName(`${name}-type`),
+    type: GQLTargetType.INTERFACE,
+    path: context.path,
+    fields,
+  }
 }
 
 function extractInputType(def: gql.OperationDefinitionNode, context: Context): GQLType {
@@ -109,7 +142,7 @@ function extractInputType(def: gql.OperationDefinitionNode, context: Context): G
         nextContext(context, variableDef.variable.name.value),
       ),
     ) ?? []
-  return { name: 'RequestType', path: context.path, fields }
+  return { name: 'RequestType', type: GQLTargetType.INTERFACE, path: context.path, fields }
 }
 
 function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {
@@ -119,6 +152,7 @@ function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {
   }
   if (!context.types[gqlType.name]) {
     context.types[gqlType.name] = { name: gqlType.name, id }
+    context.types[id] = { name: gqlType.name, id }
     return gqlType.name
   }
   const length = gqlType.path.length

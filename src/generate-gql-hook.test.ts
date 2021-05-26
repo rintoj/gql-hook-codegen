@@ -44,7 +44,10 @@ describe('generateGQLHook', () => {
         }
 
         export function useUserQuery(request: RequestType) {
-          return useQuery<RequestType, QueryType>(query, request, { skip: !request.id })
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+          })
         }
     `),
     )
@@ -104,7 +107,10 @@ describe('generateGQLHook', () => {
         }
 
         export function useUserAndTweetQuery(request: RequestType) {
-          return useQuery<RequestType, QueryType>(query, request, { skip: !request.id || !request.tweetId })
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id || !request.tweetId,
+          })
         }
     `),
     )
@@ -150,7 +156,10 @@ describe('generateGQLHook', () => {
         }
 
         export function useFollowersQuery(request: RequestType) {
-          return useQuery<RequestType, QueryType>(query, request, { skip: !request.id })
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+          })
         }
     `),
     )
@@ -203,7 +212,10 @@ describe('generateGQLHook', () => {
         }
 
         export function useUserQuery(request: RequestType) {
-          return useQuery<RequestType, QueryType>(query, request, { skip: !request.id })
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+          })
         }
     `),
     )
@@ -217,6 +229,11 @@ describe('generateGQLHook', () => {
         mutation {
           registerUser {
             id
+            name
+            email
+            follower {
+              id
+            }
           }
         }
       \`
@@ -228,15 +245,21 @@ describe('generateGQLHook', () => {
         import { useMutation } from '@apollo/client'
 
         const mutation = gql\`
-          mutation ($input: RegisterUserInput!) {
+          mutation ($input: RegisterUserInput!, $id: ID!) {
             registerUser(input: $input) {
               id
+              name
+              email
+              follower(id: $id) {
+                id
+              }
             }
           }
         \`
 
         export interface RequestType {
           input: RegisterUserInputType
+          id: string
         }
 
         export interface RegisterUserInputType {
@@ -250,10 +273,17 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           id: string
+          name?: string
+          email?: string
+          follower?: FollowerUserType
         }
 
-        export function useRegisterUserMutation(request: RequestType) {
-          return useMutation<RequestType, MutationType>(mutation, request)
+        export interface FollowerUserType {
+          id: string
+        }
+
+        export function useRegisterUserMutation() {
+          return useMutation<MutationType, RequestType>(mutation, { optimisticResponse })
         }
     `),
     )

@@ -9,19 +9,22 @@ This component adds space between to other components
 ### Yarn
 
 ```sh
-yarn add gql-hook
+yarn add gql-hook-codegen
 ```
 
 ### NPM
 
 ```sh
-npm install gql-hook
+npm install gql-hook-codegen
 ```
 
 ## Usage
 
 ```sh
-gql-hook generate <FOLDER/FILE>
+gql-hook-codegen generate [src/**/*.gql.ts]
+  [--schema FILE]
+  [--graphqlURL URL]
+  [--save]
 ```
 
 ## Automatic Release

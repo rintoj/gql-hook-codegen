@@ -1,8 +1,8 @@
 {
-  "name": "graphql-hook-generator",
+  "name": "gql-hook-codegen",
   "version": "0.0.0-development",
   "description": "A utility to generate graphql hook from query string and schema",
-  "main": "lib/index.ts",
+  "main": "lib/index.js",
   "scripts": {
     "build": "rimraf lib && tsc",
     "lint": "eslint . --fix",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rintoj/gql-hook"
+    "url": "https://github.com/rintoj/gql-hook-codegen"
   },
   "keywords": [
     "GraphQL",
@@ -21,9 +21,9 @@
   "author": "Rinto Jose",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rintoj/gql-hook/issues"
+    "url": "https://github.com/rintoj/gql-hook-codegen/issues"
   },
-  "homepage": "https://github.com/rintoj/gql-hook#readme",
+  "homepage": "https://github.com/rintoj/gql-codegen#readme",
   "devDependencies": {
     "@types/fs-extra": "^9.0.11",
     "@types/jest": "^26.0.23",

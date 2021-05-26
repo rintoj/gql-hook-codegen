@@ -154,18 +154,7 @@ function createMutationHook({
                 undefined,
               ),
             ],
-            [
-              ts.factory.createIdentifier(gqlVariableName),
-              ts.factory.createObjectLiteralExpression(
-                [
-                  ts.factory.createShorthandPropertyAssignment(
-                    ts.factory.createIdentifier('optimisticResponse'),
-                    undefined,
-                  ),
-                ],
-                false,
-              ),
-            ].filter(i => !!i) as ts.Expression[],
+            [ts.factory.createIdentifier(gqlVariableName)].filter(i => !!i) as ts.Expression[],
           ),
         ),
       ],
@@ -173,97 +162,6 @@ function createMutationHook({
     ),
   )
 }
-
-// function createOptimisticObject(type: GQLType | undefined, dataTypes: GQLType[]) {
-//   if (!type) {
-//     return
-//   }
-//   return ts.factory.createPropertyAssignment(
-//     ts.factory.createIdentifier(type.name),
-//     ts.factory.createObjectLiteralExpression(
-//       [
-//         ts.factory.createPropertyAssignment(
-//           ts.factory.createIdentifier('__typename'),
-//           ts.factory.createStringLiteral(type.),
-//         ),
-//         ...(type?.fields.map(subField => {
-//           const subType = dataTypes.find(i => i.name === subField.type)
-//           if (!subType) {
-//             return ts.factory.createPropertyAssignment(
-//               ts.factory.createIdentifier(subField.name),
-//               ts.factory.createStringLiteral(subField.schemaType),
-//             )
-//           }
-//           return createOptimisticResponseType(subType, dataTypes)
-//         }) ?? []),
-//       ].filter(i => !!i) as any,
-//     ),
-//   )
-// }
-
-// function createOptimisticResponseType(
-//   mutationType: GQLType | undefined,
-//   dataTypes: GQLType[],
-// ): any {
-//   if (!mutationType) {
-//     return []
-//   }
-//   return (
-//     mutationType?.fields.map(field => {
-//       const type = dataTypes.find(i => i.name === field.type)
-//       return
-//     }) ?? []
-//   )
-// }
-
-// function createOptimisticResponse(dataTypes: GQLType[]) {
-//   const mutationType = dataTypes.find(i => i.name === 'MutationType')
-//   return ts.factory.createVariableStatement(
-//     undefined,
-//     ts.factory.createVariableDeclarationList(
-//       [
-//         ts.factory.createVariableDeclaration(
-//           ts.factory.createIdentifier('optimisticResponse'),
-//           undefined,
-//           undefined,
-//           ts.factory.createArrowFunction(
-//             undefined,
-//             undefined,
-//             [
-//               ts.factory.createParameterDeclaration(
-//                 undefined,
-//                 undefined,
-//                 undefined,
-//                 ts.factory.createIdentifier('request'),
-//                 undefined,
-//                 ts.factory.createTypeReferenceNode(
-//                   ts.factory.createIdentifier('RequestType'),
-//                   undefined,
-//                 ),
-//                 undefined,
-//               ),
-//             ],
-//             undefined,
-//             ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-//             ts.factory.createParenthesizedExpression(
-//               ts.factory.createObjectLiteralExpression(
-//                 [
-//                   ts.factory.createPropertyAssignment(
-//                     ts.factory.createIdentifier('__typename'),
-//                     ts.factory.createStringLiteral('Mutation'),
-//                   ),
-//                   ...createOptimisticResponseType(mutationType, dataTypes),
-//                 ],
-//                 true,
-//               ),
-//             ),
-//           ),
-//         ),
-//       ],
-//       ts.NodeFlags.Const,
-//     ),
-//   )
-// }
 
 function createTSContent(statements: ts.Statement[]) {
   const tsContent = printTS(
@@ -344,8 +242,6 @@ function generateHookForOperation(
     const imports = context.imports['@apollo/client'] ?? (context.imports['@apollo/client'] = [])
     imports.push(reactHookName)
 
-    // const optimisticResponse =
-    //   operation === 'mutation' ? createOptimisticResponse(dataTypes) : undefined
     const hookStatement =
       def.operation === 'query'
         ? createQueryHook({

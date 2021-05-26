@@ -116,7 +116,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query and its types with batched query', () => {
+  test('should generate query and its types with batched query and multiple inputs', () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -231,9 +231,6 @@ describe('generateGQLHook', () => {
             id
             name
             email
-            follower {
-              id
-            }
           }
         }
       \`
@@ -245,21 +242,17 @@ describe('generateGQLHook', () => {
         import { useMutation } from '@apollo/client'
 
         const mutation = gql\`
-          mutation ($input: RegisterUserInput!, $id: ID!) {
+          mutation ($input: RegisterUserInput!) {
             registerUser(input: $input) {
               id
               name
               email
-              follower(id: $id) {
-                id
-              }
             }
           }
         \`
 
         export interface RequestType {
           input: RegisterUserInputType
-          id: string
         }
 
         export interface RegisterUserInputType {
@@ -275,15 +268,10 @@ describe('generateGQLHook', () => {
           id: string
           name?: string
           email?: string
-          follower?: FollowerUserType
-        }
-
-        export interface FollowerUserType {
-          id: string
         }
 
         export function useRegisterUserMutation() {
-          return useMutation<MutationType, RequestType>(mutation, { optimisticResponse })
+          return useMutation<MutationType, RequestType>(mutation)
         }
     `),
     )

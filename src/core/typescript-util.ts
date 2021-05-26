@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs'
 import { basename } from 'path'
 import * as ts from 'typescript'
+import { ById } from '../util/util'
 import { GQLType } from './extract-gql-types'
-import { ById } from './util'
 
 enum GQLTypeToJSType {
   'ID' = ts.SyntaxKind.StringKeyword,

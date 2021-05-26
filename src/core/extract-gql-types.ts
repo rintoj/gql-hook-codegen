@@ -1,7 +1,7 @@
 import * as gql from 'graphql'
 import { toClassName } from 'name-util'
+import { ById, md5Hex } from '../util/util'
 import { findField as findNullableField, findSchemaType, isScalarType } from './graphql-util'
-import { ById, md5Hex } from './util'
 
 export interface GQLField {
   name: string

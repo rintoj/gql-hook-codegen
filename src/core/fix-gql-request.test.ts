@@ -1,6 +1,6 @@
+import { trimPadding } from '../util/util'
 import { fixGQLRequest } from './fix-gql-request'
 import { loadSchema } from './graphql-util'
-import { trimPadding } from './util'
 
 const schema = loadSchema('test/schema.gql')
 

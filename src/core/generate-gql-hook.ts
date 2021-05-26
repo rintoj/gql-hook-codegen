@@ -3,6 +3,7 @@ import * as gql from 'graphql'
 import { toCamelCase, toClassName } from 'name-util'
 import { format } from 'prettier'
 import * as ts from 'typescript'
+import { ById, reduceToFlatArray } from '../util/util'
 import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
@@ -16,7 +17,6 @@ import {
   printTS,
   selectTSNode,
 } from './typescript-util'
-import { ById, reduceToFlatArray } from './util'
 
 const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 

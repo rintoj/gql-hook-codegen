@@ -1,6 +1,6 @@
+import { trimPadding } from '../util/util'
 import { generateGQLHook } from './generate-gql-hook'
 import { loadSchema } from './graphql-util'
-import { trimPadding } from './util'
 
 const schema = loadSchema('test/schema.gql')
 

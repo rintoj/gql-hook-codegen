@@ -1,8 +1,8 @@
-import { DocumentNode } from 'graphql'
 import { readFileSync } from 'fs-extra'
 import * as gql from 'graphql'
+import { DocumentNode } from 'graphql'
 import { toClassName } from 'name-util'
-import { required } from './util'
+import { required } from '../util/util'
 
 export enum ScalarToJSType {
   String = 'string',

@@ -6,6 +6,7 @@ import { ById, md5Hex } from './util'
 export interface GQLField {
   name: string
   type: string | GQLType
+  schemaType: string
   isNonNull?: boolean
   isArray?: boolean
 }
@@ -68,9 +69,9 @@ function extractGQLFieldType(
   if (typeDef.kind === 'NamedType') {
     if (!isScalarType(typeDef.name.value)) {
       const type = extractGQLType(typeDef.name.value, selectionSet, context)
-      return { name, type }
+      return { name, type, schemaType: typeDef.name.value }
     }
-    return { name, type: typeDef.name.value }
+    return { name, type: typeDef.name.value, schemaType: typeDef.name.value }
   } else if (typeDef.kind === 'NonNullType') {
     return { ...extractGQLFieldType(name, typeDef.type, selectionSet, context), isNonNull: true }
   } else if (typeDef.kind === 'ListType') {
@@ -106,6 +107,7 @@ function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context
         (value): GQLField => ({
           name: value.name.value,
           type: value.name.value,
+          schemaType: value.name.value,
         }),
       ) ?? [],
   }

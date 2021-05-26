@@ -22,6 +22,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
         ],
@@ -34,6 +35,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'user',
             type: 'UserType',
+            schemaType: 'User',
           },
         ],
       },
@@ -45,6 +47,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
         ],
@@ -74,11 +77,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'limit',
             type: 'Int',
+            schemaType: 'Int',
           },
         ],
       },
@@ -90,6 +95,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'user',
             type: 'UserType',
+            schemaType: 'User',
           },
         ],
       },
@@ -101,11 +107,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'followers',
             type: 'FollowersUserType',
+            schemaType: 'User',
             isArray: true,
             isNonNull: true,
           },
@@ -119,11 +127,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'name',
             type: 'String',
+            schemaType: 'String',
           },
         ],
       },
@@ -149,6 +159,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'input',
             type: 'RegisterUserInputType',
+            schemaType: 'RegisterUserInput',
             isNonNull: true,
           },
         ],
@@ -161,11 +172,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'name',
             type: 'String',
+            schemaType: 'String',
             isNonNull: true,
           },
           {
             name: 'email',
             type: 'String',
+            schemaType: 'String',
             isNonNull: true,
           },
         ],
@@ -178,6 +191,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'registerUser',
             type: 'UserType',
+            schemaType: 'User',
             isNonNull: true,
           },
         ],
@@ -190,11 +204,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'name',
             type: 'String',
+            schemaType: 'String',
           },
         ],
       },
@@ -220,11 +236,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'status',
             type: 'UserStatus',
+            schemaType: 'UserStatus',
             isNonNull: true,
           },
         ],
@@ -237,10 +255,12 @@ describe('extractGQLTypes', () => {
           {
             name: 'ACTIVE',
             type: 'ACTIVE',
+            schemaType: 'ACTIVE',
           },
           {
             name: 'INACTIVE',
             type: 'INACTIVE',
+            schemaType: 'INACTIVE',
           },
         ],
       },
@@ -252,6 +272,7 @@ describe('extractGQLTypes', () => {
           {
             name: 'setUserStatus',
             type: 'UserType',
+            schemaType: 'User',
             isNonNull: true,
           },
         ],
@@ -264,11 +285,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'status',
             type: 'UserStatus',
+            schemaType: 'UserStatus',
           },
         ],
       },
@@ -301,11 +324,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'tweetId',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'userId',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
         ],
@@ -318,10 +343,12 @@ describe('extractGQLTypes', () => {
           {
             name: 'tweet',
             type: 'TweetType',
+            schemaType: 'Tweet',
           },
           {
             name: 'user',
             type: 'UserType',
+            schemaType: 'User',
           },
         ],
       },
@@ -333,11 +360,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'author',
             type: 'UserType',
+            schemaType: 'User',
             isNonNull: true,
           },
         ],
@@ -350,11 +379,13 @@ describe('extractGQLTypes', () => {
           {
             name: 'id',
             type: 'ID',
+            schemaType: 'ID',
             isNonNull: true,
           },
           {
             name: 'name',
             type: 'String',
+            schemaType: 'String',
           },
         ],
       },

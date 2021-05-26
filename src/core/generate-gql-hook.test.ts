@@ -1,8 +1,10 @@
+import { readFileSync } from 'fs-extra'
 import { trimPadding } from '../util/util'
 import { generateGQLHook } from './generate-gql-hook'
 import { loadSchema } from './graphql-util'
 
 const schema = loadSchema('test/schema.gql')
+const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 
 describe('generateGQLHook', () => {
   test('should generate query and its types', () => {
@@ -17,7 +19,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query)
+    const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
@@ -69,7 +71,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query)
+    const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
@@ -128,7 +130,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query)
+    const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
@@ -178,7 +180,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query)
+    const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
@@ -235,7 +237,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query)
+    const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'

@@ -1,7 +1,6 @@
-import { readFileSync } from 'fs'
 import * as gql from 'graphql'
 import { toCamelCase, toClassName } from 'name-util'
-import { format } from 'prettier'
+import { format, Options } from 'prettier'
 import * as ts from 'typescript'
 import { ById, reduceToFlatArray } from '../util/util'
 import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
@@ -17,8 +16,6 @@ import {
   printTS,
   selectTSNode,
 } from './typescript-util'
-
-const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), parser: 'typescript' }
 
 interface Context {
   imports: ById<string[]>
@@ -163,7 +160,7 @@ function createMutationHook({
   )
 }
 
-function createTSContent(statements: ts.Statement[]) {
+function createTSContent(statements: ts.Statement[], prettierOptions?: Options) {
   const tsContent = printTS(
     ts.factory.createSourceFile(
       statements,
@@ -262,7 +259,11 @@ function generateHookForOperation(
   return []
 }
 
-export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): string {
+export function generateGQLHook(
+  schema: gql.DocumentNode,
+  tsContent: string,
+  prettierOptions?: Options,
+): string {
   const request = extractGQL(tsContent)
   const fixedQuery = fixGQLRequest(schema, request.gql)
   const requestDoc = parseSchema(fixedQuery)
@@ -273,10 +274,13 @@ export function generateGQLHook(schema: gql.DocumentNode, tsContent: string): st
     def => generateHookForOperation(schema, def, request.variable, context),
   ) as any
 
-  return createTSContent([
-    createImportStatement('gql', 'graphql-tag'),
-    ...createNamedImports(context.imports),
-    createGQLQuery(fixedQuery, request.variable),
-    ...statements,
-  ])
+  return createTSContent(
+    [
+      createImportStatement('gql', 'graphql-tag'),
+      ...createNamedImports(context.imports),
+      createGQLQuery(fixedQuery, request.variable),
+      ...statements,
+    ],
+    prettierOptions,
+  )
 }

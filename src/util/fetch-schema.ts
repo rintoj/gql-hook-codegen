@@ -10,18 +10,24 @@ interface Options {
 
 export async function fetchRemoteSchema(
   graphqlURL: string,
-  options: Options,
+  options: Options = {},
 ): Promise<gql.DocumentNode> {
-  const { data, errors } = await fetch(graphqlURL, {
+  const response = await fetch(graphqlURL, {
     method: options.method ?? 'POST',
-    headers: options.headers,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
     body: JSON.stringify({ query: getIntrospectionQuery() }),
-  }).then(response => response.json())
-
+  })
+  if (!response.ok) {
+    throw new Error(response.statusText)
+  }
+  const { data, errors } = await response.json()
   if (errors) {
     throw new Error(JSON.stringify(errors))
   }
-  return data
+  return gql.parse(gql.printSchema(gql.buildClientSchema(data)))
 }
 
 export async function fetchLocalSchema(file: string): Promise<gql.DocumentNode> {

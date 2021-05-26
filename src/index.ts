@@ -1,1 +1,1 @@
-export * from './generate-gql-hook'
+export * from './core'

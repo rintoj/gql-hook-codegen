@@ -26,6 +26,7 @@ input RegisterUserInput {
 }
 
 type Query {
+  me: User
   user(id: ID!): User
   tweet(id: ID!): Tweet
   followers(id: ID!, limit: Int): [User]!
@@ -34,6 +35,7 @@ type Query {
 type Mutation {
   registerUser(input: RegisterUserInput!): User!
   setUserStatus(id: ID!, status: UserStatus!): User!
+  signIn: User!
 }
 
 type Subscription {

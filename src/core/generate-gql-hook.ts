@@ -27,12 +27,14 @@ function createQueryHook({
   reactHookName,
   gqlVariableName,
   requiredRequestVariables,
+  hasVariables,
 }: {
   hookName: string
   responseType: string
   reactHookName: string
   gqlVariableName: string
   requiredRequestVariables: string[] | undefined
+  hasVariables: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
     undefined,
@@ -40,17 +42,22 @@ function createQueryHook({
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
-    [
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        undefined,
-        ts.factory.createIdentifier('request'),
-        undefined,
-        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('RequestType'), undefined),
-        undefined,
-      ),
-    ],
+    hasVariables
+      ? [
+          ts.factory.createParameterDeclaration(
+            undefined,
+            undefined,
+            undefined,
+            ts.factory.createIdentifier('request'),
+            undefined,
+            ts.factory.createTypeReferenceNode(
+              ts.factory.createIdentifier('RequestType'),
+              undefined,
+            ),
+            undefined,
+          ),
+        ]
+      : [],
     undefined,
     ts.factory.createBlock(
       [
@@ -63,23 +70,25 @@ function createQueryHook({
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier('RequestType'),
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
                 undefined,
               ),
             ],
             [
               ts.factory.createIdentifier(gqlVariableName),
-              ts.factory.createObjectLiteralExpression(
-                [
-                  ts.factory.createPropertyAssignment(
-                    ts.factory.createIdentifier('variables'),
-                    ts.factory.createIdentifier('request'),
-                  ),
-                  requiredRequestVariables ? createSkip(requiredRequestVariables) : null,
-                ].filter(i => !!i) as any,
-                true,
-              ),
-            ],
+              hasVariables
+                ? ts.factory.createObjectLiteralExpression(
+                    [
+                      ts.factory.createPropertyAssignment(
+                        ts.factory.createIdentifier('variables'),
+                        ts.factory.createIdentifier('request'),
+                      ),
+                      requiredRequestVariables ? createSkip(requiredRequestVariables) : null,
+                    ].filter(i => !!i) as any,
+                    true,
+                  )
+                : undefined,
+            ].filter(i => !!i) as any,
           ),
         ),
       ],
@@ -122,11 +131,13 @@ function createMutationHook({
   responseType,
   reactHookName,
   gqlVariableName,
+  hasVariables,
 }: {
   hookName: string
   responseType: string
   reactHookName: string
   gqlVariableName: string
+  hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
     undefined,
@@ -147,7 +158,7 @@ function createMutationHook({
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier('RequestType'),
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
                 undefined,
               ),
             ],
@@ -207,6 +218,11 @@ function generateUniqueName(def: gql.OperationDefinitionNode) {
     .join('And')
 }
 
+function hasRequestVariables(dataTypes: GQLType[]) {
+  const request = dataTypes.find(dataType => dataType.name === 'RequestType')
+  return !!request?.fields.length
+}
+
 function findRequiredRequestVariables(dataTypes: GQLType[]) {
   const request = dataTypes.find(dataType => dataType.name === 'RequestType')
   return request?.fields.filter(field => field.isNonNull).map(field => field.name) ?? []
@@ -229,7 +245,7 @@ function generateHookForOperation(
       operation === 'query' ? findRequiredRequestVariables(dataTypes) : undefined
 
     const statements = dataTypes.map(dataType => {
-      if (dataType.type === GQLObjectType.INTERFACE) {
+      if (dataType.type === GQLObjectType.INTERFACE && !!dataType.fields.length) {
         return createInterface(dataType, dataType.name === 'RequestType' && operation === 'query')
       } else if (dataType.type === GQLObjectType.ENUM) {
         return createEnum(dataType)
@@ -247,12 +263,14 @@ function generateHookForOperation(
             reactHookName,
             gqlVariableName,
             requiredRequestVariables,
+            hasVariables: hasRequestVariables(dataTypes),
           })
         : createMutationHook({
             hookName,
             responseType,
             reactHookName,
             gqlVariableName,
+            hasVariables: hasRequestVariables(dataTypes),
           })
     return [...statements, hookStatement].filter(i => !!i)
   }

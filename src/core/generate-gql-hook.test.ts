@@ -278,4 +278,92 @@ describe('generateGQLHook', () => {
     `),
     )
   })
+
+  test('should generate query with no request type if query has no parameters', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query me {
+          me {
+            id
+            name
+            email
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { useQuery } from '@apollo/client'
+
+        const query = gql\`
+          query me {
+            me {
+              id
+              name
+              email
+            }
+          }
+        \`
+
+        export interface QueryType {
+          me?: UserType
+        }
+
+        export interface UserType {
+          id: string
+          name?: string
+          email?: string
+        }
+
+        export function useMeQuery() {
+          return useQuery<QueryType, void>(query)
+        }
+    `),
+    )
+  })
+
+  test('should generate query with no request type if query has no parameters', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const mutation = gql\`
+        mutation {
+          signIn {
+            id
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { useMutation } from '@apollo/client'
+
+        const mutation = gql\`
+          mutation {
+            signIn {
+              id
+            }
+          }
+        \`
+
+        export interface MutationType {
+          signIn: UserType
+        }
+
+        export interface UserType {
+          id: string
+        }
+
+        export function useSignInMutation() {
+          return useMutation<MutationType, void>(mutation)
+        }
+    `),
+    )
+  })
 })

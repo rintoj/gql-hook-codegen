@@ -1,4 +1,4 @@
-import { trimPadding } from '../util/util'
+import { trimPaddingAndEmptyLines } from '../util/util'
 import { fixGQLRequest } from './fix-gql-request'
 import { loadSchema } from './graphql-util'
 
@@ -15,8 +15,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!) {
           user(id: $id) {
             id
@@ -37,8 +37,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $limit: Int) {
           followers(id: $id, limit: $limit) {
             id
@@ -62,8 +62,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $limit: Int) {
           user(id: $id) {
             name
@@ -94,8 +94,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $limit: Int, $userFollowersFollowersLimit: Int) {
           user(id: $id) {
             name
@@ -126,8 +126,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $userFollowerId: ID!) {
           user(id: $id) {
             name
@@ -158,8 +158,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $userFollowerId: ID!, $userFollowerFollowerId: ID!) {
           user(id: $id) {
             name
@@ -189,8 +189,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!, $followersId: ID!, $limit: Int) {
           user(id: $id) {
             name
@@ -215,8 +215,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($userId: ID!, $followersId: ID!, $limit: Int) {
           user(id: $userId) {
             name
@@ -278,8 +278,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         mutation ($input: RegisterUserInput!) {
           registerUser(input: $input) {
             id
@@ -300,8 +300,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         subscription ($id: ID!) {
           onUserChange(id: $id) {
             id
@@ -322,8 +322,8 @@ describe('fixGQLRequest', () => {
       }
     `
     const fixedQuery = fixGQLRequest(schema, query)
-    expect(trimPadding(fixedQuery)).toEqual(
-      trimPadding(`
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
         query ($id: ID!) {
           user(id: $id) {
             id

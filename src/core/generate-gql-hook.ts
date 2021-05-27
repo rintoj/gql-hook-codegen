@@ -171,15 +171,13 @@ function createMutationHook({
   )
 }
 
-function createTSContent(statements: ts.Statement[], prettierOptions?: Options) {
-  const tsContent = printTS(
-    ts.factory.createSourceFile(
-      statements,
-      ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-      ts.NodeFlags.Const,
-    ) as any,
-  )
-  return format(tsContent, prettierOptions)
+function createTSContent(
+  statements: ts.Statement[],
+  options?: { blankLinesBetweenStatements: boolean },
+) {
+  return statements
+    .map(statement => printTS(statement as any))
+    .join(options?.blankLinesBetweenStatements ? '\n\n' : '\n')
 }
 
 function extractGQL(query: string) {
@@ -292,13 +290,14 @@ export function generateGQLHook(
     def => generateHookForOperation(schema, def, request.variable, context),
   ) as any
 
-  return createTSContent(
-    [
-      createImportStatement('gql', 'graphql-tag'),
-      ...createNamedImports(context.imports),
-      createGQLQuery(fixedQuery, request.variable),
-      ...statements,
-    ],
-    prettierOptions,
+  const imports = createTSContent(
+    [createImportStatement('gql', 'graphql-tag'), ...createNamedImports(context.imports)],
+    { blankLinesBetweenStatements: false },
   )
+
+  const content = createTSContent([createGQLQuery(fixedQuery, request.variable), ...statements], {
+    blankLinesBetweenStatements: true,
+  })
+
+  return format([imports, content].join('\n\n'), prettierOptions)
 }

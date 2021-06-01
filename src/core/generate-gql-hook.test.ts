@@ -23,7 +23,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/client'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!) {
@@ -45,8 +45,12 @@ describe('generateGQLHook', () => {
           name?: string
         }
 
-        export function useUserQuery(request: RequestType) {
+        export function useUserQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
           return useQuery<QueryType, RequestType>(query, {
+            ...options,
             variables: request,
             skip: !request.id,
           })
@@ -75,7 +79,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/client'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!, $tweetId: ID!) {
@@ -108,8 +112,12 @@ describe('generateGQLHook', () => {
           content: string
         }
 
-        export function useUserAndTweetQuery(request: RequestType) {
+        export function useUserAndTweetQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
           return useQuery<QueryType, RequestType>(query, {
+            ...options,
             variables: request,
             skip: !request.id || !request.tweetId,
           })
@@ -134,7 +142,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/client'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!, $limit: Int) {
@@ -157,8 +165,12 @@ describe('generateGQLHook', () => {
           name?: string
         }
 
-        export function useFollowersQuery(request: RequestType) {
+        export function useFollowersQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
           return useQuery<QueryType, RequestType>(query, {
+            ...options,
             variables: request,
             skip: !request.id,
           })
@@ -184,7 +196,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/client'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
           query ($id: ID!) {
@@ -213,8 +225,12 @@ describe('generateGQLHook', () => {
           INACTIVE = 'INACTIVE',
         }
 
-        export function useUserQuery(request: RequestType) {
+        export function useUserQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
           return useQuery<QueryType, RequestType>(query, {
+            ...options,
             variables: request,
             skip: !request.id,
           })
@@ -241,7 +257,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useMutation } from '@apollo/client'
+        import { MutationHookOptions, useMutation } from '@apollo/client'
 
         const mutation = gql\`
           mutation ($input: RegisterUserInput!) {
@@ -272,8 +288,8 @@ describe('generateGQLHook', () => {
           email?: string
         }
 
-        export function useRegisterUserMutation() {
-          return useMutation<MutationType, RequestType>(mutation)
+        export function useRegisterUserMutation(options?: MutationHookOptions<MutationType, RequestType>) {
+          return useMutation<MutationType, RequestType>(mutation, options)
         }
     `),
     )
@@ -297,7 +313,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useQuery } from '@apollo/client'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
           query me {
@@ -319,8 +335,8 @@ describe('generateGQLHook', () => {
           email?: string
         }
 
-        export function useMeQuery() {
-          return useQuery<QueryType, void>(query)
+        export function useMeQuery(options?: QueryHookOptions<QueryType, void>) {
+          return useQuery<QueryType, void>(query, options)
         }
     `),
     )
@@ -342,7 +358,7 @@ describe('generateGQLHook', () => {
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import gql from 'graphql-tag'
-        import { useMutation } from '@apollo/client'
+        import { MutationHookOptions, useMutation } from '@apollo/client'
 
         const mutation = gql\`
           mutation {
@@ -360,8 +376,8 @@ describe('generateGQLHook', () => {
           id: string
         }
 
-        export function useSignInMutation() {
-          return useMutation<MutationType, void>(mutation)
+        export function useSignInMutation(options?: MutationHookOptions<MutationType, void>) {
+          return useMutation<MutationType, void>(mutation, options)
         }
     `),
     )

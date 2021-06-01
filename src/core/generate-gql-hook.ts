@@ -42,9 +42,9 @@ function createQueryHook({
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
-    hasVariables
-      ? [
-          ts.factory.createParameterDeclaration(
+    [
+      hasVariables
+        ? ts.factory.createParameterDeclaration(
             undefined,
             undefined,
             undefined,
@@ -55,9 +55,25 @@ function createQueryHook({
               undefined,
             ),
             undefined,
+          )
+        : (undefined as any),
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('options'),
+        ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryHookOptions'), [
+          ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryType'), undefined),
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+            undefined,
           ),
-        ]
-      : [],
+        ]),
+        undefined,
+      ),
+    ].filter(i => !!i),
+
     undefined,
     ts.factory.createBlock(
       [
@@ -79,6 +95,7 @@ function createQueryHook({
               hasVariables
                 ? ts.factory.createObjectLiteralExpression(
                     [
+                      ts.factory.createSpreadAssignment(ts.factory.createIdentifier('options')),
                       ts.factory.createPropertyAssignment(
                         ts.factory.createIdentifier('variables'),
                         ts.factory.createIdentifier('request'),
@@ -87,7 +104,7 @@ function createQueryHook({
                     ].filter(i => !!i) as any,
                     true,
                   )
-                : undefined,
+                : ts.factory.createIdentifier('options'),
             ].filter(i => !!i) as any,
           ),
         ),
@@ -145,7 +162,26 @@ function createMutationHook({
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
-    [],
+    [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('options'),
+        ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('MutationHookOptions'), [
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier('MutationType'),
+            undefined,
+          ),
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+            undefined,
+          ),
+        ]),
+        undefined,
+      ),
+    ],
     undefined,
     ts.factory.createBlock(
       [
@@ -162,7 +198,7 @@ function createMutationHook({
                 undefined,
               ),
             ],
-            [ts.factory.createIdentifier(gqlVariableName)].filter(i => !!i) as ts.Expression[],
+            [ts.factory.createIdentifier(gqlVariableName), ts.factory.createIdentifier('options')],
           ),
         ),
       ],
@@ -237,6 +273,7 @@ function generateHookForOperation(
     const operation = def.operation
     const reactHookName = toCamelCase(`use-${operation}`)
     const hookName = toCamelCase(`use-${name}-${operation}`)
+    const optionsName = toClassName(`${operation}-HookOptions`)
     const responseType = toClassName(`${operation}-type`)
     const dataTypes = extractGQLTypes(schema, def)
     const requiredRequestVariables =
@@ -251,6 +288,7 @@ function generateHookForOperation(
     })
 
     const imports = context.imports['@apollo/client'] ?? (context.imports['@apollo/client'] = [])
+    imports.push(optionsName)
     imports.push(reactHookName)
 
     const hookStatement =

@@ -107,6 +107,18 @@ function parseSelectionSet(
   return { ...selectionSet, selections }
 }
 
+function toOperationName(def: gql.OperationDefinitionNode) {
+  const variables = def.selectionSet.selections?.map((selection: any) => selection.name.value) ?? []
+  switch (def.operation) {
+    case 'query':
+      return toCamelCase(`fetch-${variables.join('-and-')}`)
+    case 'mutation':
+      return toCamelCase(`${variables.join('-and-')}`)
+    case 'subscription':
+      return toCamelCase(`subscribeTo-${variables.join('-and-')}`)
+  }
+}
+
 function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
     const type = def.operation
@@ -114,6 +126,11 @@ function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
     const operationDef = findObjectType(schema, toClassName(type))
     return {
       ...def,
+      name: {
+        kind: gql.Kind.NAME,
+        ...def.name,
+        value: def.name?.value ?? toOperationName(def),
+      },
       selectionSet: parseSelectionSet(def.selectionSet, operationDef, context),
       variableDefinitions: context.variables.map(inputValueDefToVariableDef),
     }

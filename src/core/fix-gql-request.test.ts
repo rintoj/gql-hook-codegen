@@ -7,7 +7,7 @@ const schema = loadSchema('test/schema.gql')
 describe('fixGQLRequest', () => {
   test('should fix argument for a simple query', () => {
     const query = `
-      query {
+      query getUser{
         user {
           id
           name
@@ -17,7 +17,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!) {
+        query getUser($id: ID!) {
           user(id: $id) {
             id
             name
@@ -39,7 +39,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $limit: Int) {
+        query fetchFollowers($id: ID!, $limit: Int) {
           followers(id: $id, limit: $limit) {
             id
             name
@@ -64,7 +64,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $limit: Int) {
+        query fetchUser($id: ID!, $limit: Int) {
           user(id: $id) {
             name
             followers(limit: $limit) {
@@ -96,7 +96,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $limit: Int, $userFollowersFollowersLimit: Int) {
+        query fetchUser($id: ID!, $limit: Int, $userFollowersFollowersLimit: Int) {
           user(id: $id) {
             name
             followers(limit: $limit) {
@@ -128,7 +128,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $userFollowerId: ID!) {
+        query fetchUser($id: ID!, $userFollowerId: ID!) {
           user(id: $id) {
             name
             follower(id: $userFollowerId) {
@@ -160,7 +160,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $userFollowerId: ID!, $userFollowerFollowerId: ID!) {
+        query fetchUser($id: ID!, $userFollowerId: ID!, $userFollowerFollowerId: ID!) {
           user(id: $id) {
             name
             follower(id: $userFollowerId) {
@@ -191,7 +191,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!, $followersId: ID!, $limit: Int) {
+        query fetchUserAndFollowers($id: ID!, $followersId: ID!, $limit: Int) {
           user(id: $id) {
             name
           }
@@ -217,7 +217,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($userId: ID!, $followersId: ID!, $limit: Int) {
+        query fetchUserAndFollowers($userId: ID!, $followersId: ID!, $limit: Int) {
           user(id: $userId) {
             name
           }
@@ -257,7 +257,7 @@ describe('fixGQLRequest', () => {
 
   test('should throw an error if invalid selector is used in a subscription', () => {
     const query = `
-      subscription {
+      subscription subscribeToToOnUserUsage{
         onUserChange {
           id
           name
@@ -280,7 +280,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        mutation ($input: RegisterUserInput!) {
+        mutation registerUser($input: RegisterUserInput!) {
           registerUser(input: $input) {
             id
             name
@@ -302,7 +302,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        subscription ($id: ID!) {
+        subscription subscribeToOnUserChange($id: ID!) {
           onUserChange(id: $id) {
             id
             name
@@ -324,7 +324,7 @@ describe('fixGQLRequest', () => {
     const fixedQuery = fixGQLRequest(schema, query)
     expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
       trimPaddingAndEmptyLines(`
-        query ($id: ID!) {
+        query fetchUser($id: ID!) {
           user(id: $id) {
             id
             status

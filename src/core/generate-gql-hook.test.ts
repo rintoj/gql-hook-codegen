@@ -26,7 +26,7 @@ describe('generateGQLHook', () => {
         import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
-          query ($id: ID!) {
+          query fetchUser($id: ID!) {
             user(id: $id) {
               name
             }
@@ -82,7 +82,7 @@ describe('generateGQLHook', () => {
         import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
-          query ($id: ID!, $tweetId: ID!) {
+          query fetchUserAndTweet($id: ID!, $tweetId: ID!) {
             user(id: $id) {
               name
             }
@@ -145,7 +145,7 @@ describe('generateGQLHook', () => {
         import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
-          query ($id: ID!, $limit: Int) {
+          query fetchFollowers($id: ID!, $limit: Int) {
             followers(id: $id, limit: $limit) {
               name
             }
@@ -199,7 +199,7 @@ describe('generateGQLHook', () => {
         import { QueryHookOptions, useQuery } from '@apollo/client'
 
         const query = gql\`
-          query ($id: ID!) {
+          query fetchUser($id: ID!) {
             user(id: $id) {
               id
               status
@@ -260,7 +260,7 @@ describe('generateGQLHook', () => {
         import { MutationHookOptions, useMutation } from '@apollo/client'
 
         const mutation = gql\`
-          mutation ($input: RegisterUserInput!) {
+          mutation registerUser($input: RegisterUserInput!) {
             registerUser(input: $input) {
               id
               name
@@ -408,7 +408,7 @@ describe('generateGQLHook', () => {
         import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
 
         const lazyQuery = gql\`
-          query ($id: ID!) {
+          query fetchUser($id: ID!) {
             user(id: $id) {
               name
             }
@@ -460,7 +460,7 @@ describe('generateGQLHook', () => {
         import { MutationHookOptions, useMutation } from '@apollo/client'
 
         const mutation = gql\`
-          mutation {
+          mutation signIn {
             signIn {
               id
             }

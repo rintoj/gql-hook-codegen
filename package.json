@@ -63,7 +63,8 @@
     "preset": "ts-jest",
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/build/"
+      "/build/",
+      "/lib/"
     ],
     "testEnvironment": "node",
     "globals": {

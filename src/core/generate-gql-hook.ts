@@ -1,5 +1,5 @@
 import * as gql from 'graphql'
-import { toCamelCase, toClassName } from 'name-util'
+import { toCamelCase, toClassName, toDashedName } from 'name-util'
 import { format, Options } from 'prettier'
 import * as ts from 'typescript'
 import { ById, reduceToFlatArray } from '../util/util'
@@ -26,6 +26,7 @@ function createQueryHook({
   responseType,
   reactHookName,
   gqlVariableName,
+  isLazyQuery,
   requiredRequestVariables,
   hasVariables,
 }: {
@@ -33,6 +34,7 @@ function createQueryHook({
   responseType: string
   reactHookName: string
   gqlVariableName: string
+  isLazyQuery: boolean
   requiredRequestVariables: string[] | undefined
   hasVariables: boolean
 }) {
@@ -63,13 +65,16 @@ function createQueryHook({
         undefined,
         ts.factory.createIdentifier('options'),
         ts.factory.createToken(ts.SyntaxKind.QuestionToken),
-        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryHookOptions'), [
-          ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryType'), undefined),
-          ts.factory.createTypeReferenceNode(
-            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
-            undefined,
-          ),
-        ]),
+        ts.factory.createTypeReferenceNode(
+          ts.factory.createIdentifier(isLazyQuery ? 'LazyQueryHookOptions' : 'QueryHookOptions'),
+          [
+            ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryType'), undefined),
+            ts.factory.createTypeReferenceNode(
+              ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+              undefined,
+            ),
+          ],
+        ),
         undefined,
       ),
     ].filter(i => !!i),
@@ -269,11 +274,20 @@ function generateHookForOperation(
   context: Context,
 ) {
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
+    const isLazyQuery = toDashedName(gqlVariableName)
+      .split('-')
+      .map(i => i.toLocaleLowerCase())
+      .includes('lazy')
+
     const name = generateUniqueName(def)
     const operation = def.operation
-    const reactHookName = toCamelCase(`use-${operation}`)
     const hookName = toCamelCase(`use-${name}-${operation}`)
-    const optionsName = toClassName(`${operation}-HookOptions`)
+    const reactHookName =
+      operation === 'query' && isLazyQuery ? 'useLazyQuery' : toCamelCase(`use-${operation}`)
+    const optionsName =
+      operation === 'query' && isLazyQuery
+        ? 'LazyQueryHookOptions'
+        : toClassName(`${operation}-HookOptions`)
     const responseType = toClassName(`${operation}-type`)
     const dataTypes = extractGQLTypes(schema, def)
     const requiredRequestVariables =
@@ -298,6 +312,7 @@ function generateHookForOperation(
             responseType,
             reactHookName,
             gqlVariableName,
+            isLazyQuery,
             requiredRequestVariables,
             hasVariables: hasRequestVariables(dataTypes),
           })

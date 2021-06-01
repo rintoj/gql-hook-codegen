@@ -342,6 +342,105 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate lazy query with no parameters', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const lazyQuery = gql\`
+        query me {
+          me {
+            id
+            name
+            email
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+
+        const lazyQuery = gql\`
+          query me {
+            me {
+              id
+              name
+              email
+            }
+          }
+        \`
+
+        export interface QueryType {
+          me?: UserType
+        }
+
+        export interface UserType {
+          id: string
+          name?: string
+          email?: string
+        }
+
+        export function useMeQuery(options?: LazyQueryHookOptions<QueryType, void>) {
+          return useLazyQuery<QueryType, void>(lazyQuery, options)
+        }
+    `),
+    )
+  })
+
+  test('should generate lazy query and its types', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const lazyQuery = gql\`
+        query {
+          user {
+            name
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+
+        const lazyQuery = gql\`
+          query ($id: ID!) {
+            user(id: $id) {
+              name
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+        }
+
+        export interface QueryType {
+          user?: UserType
+        }
+
+        export interface UserType {
+          name?: string
+        }
+
+        export function useUserQuery(
+          request: RequestType,
+          options?: LazyQueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useLazyQuery<QueryType, RequestType>(lazyQuery, {
+            ...options,
+            variables: request,
+            skip: !request.id,
+          })
+        }
+    `),
+    )
+  })
+
   test('should generate query with no request type if query has no parameters', () => {
     const query = `
       import gql from 'graphql-tag'

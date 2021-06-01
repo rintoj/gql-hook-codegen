@@ -50,9 +50,9 @@ describe('generateGQLHook', () => {
           options?: QueryHookOptions<QueryType, RequestType>,
         ) {
           return useQuery<QueryType, RequestType>(query, {
-            ...options,
             variables: request,
             skip: !request.id,
+            ...options,
           })
         }
     `),
@@ -117,9 +117,9 @@ describe('generateGQLHook', () => {
           options?: QueryHookOptions<QueryType, RequestType>,
         ) {
           return useQuery<QueryType, RequestType>(query, {
-            ...options,
             variables: request,
             skip: !request.id || !request.tweetId,
+            ...options,
           })
         }
     `),
@@ -170,9 +170,9 @@ describe('generateGQLHook', () => {
           options?: QueryHookOptions<QueryType, RequestType>,
         ) {
           return useQuery<QueryType, RequestType>(query, {
-            ...options,
             variables: request,
             skip: !request.id,
+            ...options,
           })
         }
     `),
@@ -230,9 +230,9 @@ describe('generateGQLHook', () => {
           options?: QueryHookOptions<QueryType, RequestType>,
         ) {
           return useQuery<QueryType, RequestType>(query, {
-            ...options,
             variables: request,
             skip: !request.id,
+            ...options,
           })
         }
     `),
@@ -432,9 +432,9 @@ describe('generateGQLHook', () => {
           options?: LazyQueryHookOptions<QueryType, RequestType>,
         ) {
           return useLazyQuery<QueryType, RequestType>(lazyQuery, {
-            ...options,
             variables: request,
             skip: !request.id,
+            ...options,
           })
         }
     `),

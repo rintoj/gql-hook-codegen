@@ -14,6 +14,7 @@ export interface GQLField {
 export enum GQLObjectType {
   INTERFACE = 'INTERFACE',
   ENUM = 'ENUM',
+  SCALAR = 'SCALAR',
 }
 
 export interface GQLType {
@@ -113,6 +114,15 @@ function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context
   }
 }
 
+function extractScalarType(objectDef: gql.ScalarTypeDefinitionNode, context: Context): GQLType {
+  return {
+    name: objectDef.name.value,
+    type: GQLObjectType.SCALAR,
+    path: context.path,
+    fields: [],
+  }
+}
+
 function extractGQLType(
   name: string,
   selectionSet: gql.SelectionSetNode | undefined,
@@ -124,6 +134,9 @@ function extractGQLType(
   }
   if (def.kind === gql.Kind.ENUM_TYPE_DEFINITION) {
     return extractEnumType(def, context)
+  }
+  if (def.kind === gql.Kind.SCALAR_TYPE_DEFINITION) {
+    return extractScalarType(def, context)
   }
   const fields = selectionSet
     ? selectionSet.selections.map(field => extractGQLField(field, def, context))

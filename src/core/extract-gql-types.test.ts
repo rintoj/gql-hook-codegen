@@ -298,6 +298,69 @@ describe('extractGQLTypes', () => {
     ])
   })
 
+  test('should extract scalar types', () => {
+    const request: any = parseSchema(`
+      query fetchUser ($id: ID!) {
+        user(id: $id) {
+          id
+          createdAt
+        }
+      }
+    `)
+    const types = extractGQLTypes(schema, request.definitions[0])
+    expect(types).toEqual([
+      {
+        name: 'RequestType',
+        type: 'INTERFACE',
+        path: ['variables'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'QueryType',
+        type: 'INTERFACE',
+        path: ['query'],
+        fields: [
+          {
+            name: 'user',
+            type: 'UserType',
+            schemaType: 'User',
+          },
+        ],
+      },
+      {
+        name: 'UserType',
+        type: 'INTERFACE',
+        path: ['query', 'user'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'createdAt',
+            type: 'DateTime',
+            schemaType: 'DateTime',
+          },
+        ],
+      },
+      {
+        name: 'DateTime',
+        type: 'SCALAR',
+        path: ['query', 'user', 'createdAt'],
+        fields: [],
+      },
+    ])
+  })
+
   test('should extract types from multiple queries', () => {
     const request: any = parseSchema(`
       query ($tweetId: ID!, $userId: ID!) {

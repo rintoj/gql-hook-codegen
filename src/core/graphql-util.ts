@@ -52,6 +52,7 @@ export function findSchemaType(schema: DocumentNode, type: string) {
     gql.Kind.OBJECT_TYPE_DEFINITION,
     gql.Kind.INPUT_OBJECT_TYPE_DEFINITION,
     gql.Kind.ENUM_TYPE_DEFINITION,
+    gql.Kind.SCALAR_TYPE_DEFINITION,
   ]
   return schema.definitions.find(
     (def: any) => kinds.includes(def.kind) && def.name.value === type,
@@ -59,6 +60,7 @@ export function findSchemaType(schema: DocumentNode, type: string) {
     | gql.ObjectTypeDefinitionNode
     | gql.InputObjectTypeDefinitionNode
     | gql.EnumTypeDefinitionNode
+    | gql.ScalarTypeDefinitionNode
     | undefined
 }
 

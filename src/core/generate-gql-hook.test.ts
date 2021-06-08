@@ -239,6 +239,61 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate query with date', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query {
+          user {
+            id
+            createdAt
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
+
+        const query = gql\`
+          query fetchUser($id: ID!) {
+            user(id: $id) {
+              id
+              createdAt
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+        }
+
+        export interface QueryType {
+          user?: UserType
+        }
+
+        export interface UserType {
+          id: string
+          createdAt?: DateTime
+        }
+
+        export function useUserQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+            ...options,
+          })
+        }
+    `),
+    )
+  })
+
   test('should generate mutation and its types', () => {
     const query = `
       import gql from 'graphql-tag'

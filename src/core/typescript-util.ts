@@ -220,10 +220,10 @@ export function createGQLQuery(query: string, variableName = 'query') {
 }
 
 export function createType(type: string, isArray: boolean, allowUndefined?: boolean) {
-  const jsType = (GQLTypeToJSType as any)[type as string]
+  const jsType = (GQLTypeToJSType as any)[type]
   let targetType = jsType
     ? ts.factory.createKeywordTypeNode(jsType)
-    : ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(type as string), undefined)
+    : ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(type), undefined)
 
   if (isArray) {
     targetType = ts.factory.createArrayTypeNode(targetType)

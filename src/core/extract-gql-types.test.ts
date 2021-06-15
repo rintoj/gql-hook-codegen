@@ -16,6 +16,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -29,6 +30,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['query'],
         fields: [
@@ -41,6 +43,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [
@@ -71,6 +74,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -89,6 +93,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['query'],
         fields: [
@@ -101,6 +106,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [
@@ -121,6 +127,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'FollowersUserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['query', 'user', 'followers'],
         fields: [
@@ -153,6 +160,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -166,6 +174,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'RegisterUserInputType',
+        originalName: 'RegisterUserInput',
         type: 'INTERFACE',
         path: ['variables', 'input'],
         fields: [
@@ -185,6 +194,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'MutationType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['mutation'],
         fields: [
@@ -198,6 +208,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['mutation', 'registerUser'],
         fields: [
@@ -230,6 +241,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -249,6 +261,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserStatus',
+        originalName: null,
         type: 'ENUM',
         path: ['mutation', 'setUserStatus', 'status'],
         fields: [
@@ -266,6 +279,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'MutationType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['mutation'],
         fields: [
@@ -279,6 +293,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['mutation', 'setUserStatus'],
         fields: [
@@ -311,6 +326,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -324,6 +340,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['query'],
         fields: [
@@ -336,6 +353,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [
@@ -354,6 +372,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'DateTime',
+        originalName: null,
         type: 'SCALAR',
         path: ['query', 'user', 'createdAt'],
         fields: [],
@@ -381,6 +400,7 @@ describe('extractGQLTypes', () => {
     expect(types).toEqual([
       {
         name: 'RequestType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['variables'],
         fields: [
@@ -400,6 +420,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'QueryType',
+        originalName: null,
         type: 'INTERFACE',
         path: ['query'],
         fields: [
@@ -417,6 +438,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'TweetType',
+        originalName: 'Tweet',
         type: 'INTERFACE',
         path: ['query', 'tweet'],
         fields: [
@@ -436,6 +458,7 @@ describe('extractGQLTypes', () => {
       },
       {
         name: 'UserType',
+        originalName: 'User',
         type: 'INTERFACE',
         path: ['query', 'user'],
         fields: [

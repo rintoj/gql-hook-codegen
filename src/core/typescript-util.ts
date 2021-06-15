@@ -238,21 +238,31 @@ export function createType(type: string, isArray: boolean, allowUndefined?: bool
   return targetType
 }
 
-export function createInterface({ name, fields }: GQLType, allowUndefined?: boolean) {
+export function createInterface({ name, originalName, fields }: GQLType, allowUndefined?: boolean) {
   return ts.factory.createInterfaceDeclaration(
     undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     ts.factory.createIdentifier(name),
     undefined,
     undefined,
-    fields.map(field => {
-      return ts.factory.createPropertySignature(
-        undefined,
-        ts.factory.createIdentifier(field.name),
-        field.isNonNull ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
-        createType(field.type as string, !!field.isArray, allowUndefined),
-      )
-    }),
+    [
+      ...fields.map(field => {
+        return ts.factory.createPropertySignature(
+          undefined,
+          ts.factory.createIdentifier(field.name),
+          field.isNonNull ? undefined : ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+          createType(field.type as string, !!field.isArray, allowUndefined),
+        )
+      }),
+      originalName
+        ? ts.factory.createPropertySignature(
+            undefined,
+            ts.factory.createIdentifier('__typename'),
+            ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+            ts.factory.createLiteralTypeNode(ts.factory.createStringLiteral(originalName)),
+          )
+        : undefined,
+    ].filter(i => !!i) as any,
   )
 }
 

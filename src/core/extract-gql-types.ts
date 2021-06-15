@@ -20,6 +20,7 @@ export enum GQLObjectType {
 export interface GQLType {
   id?: string
   name: string
+  originalName: string | null
   type: GQLObjectType
   path: string[]
   fields: GQLField[]
@@ -101,6 +102,7 @@ function extractGQLField(
 function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context): GQLType {
   return {
     name: objectDef.name.value,
+    originalName: null,
     type: GQLObjectType.ENUM,
     path: context.path,
     fields:
@@ -117,6 +119,7 @@ function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context
 function extractScalarType(objectDef: gql.ScalarTypeDefinitionNode, context: Context): GQLType {
   return {
     name: objectDef.name.value,
+    originalName: null,
     type: GQLObjectType.SCALAR,
     path: context.path,
     fields: [],
@@ -145,6 +148,7 @@ function extractGQLType(
       ) ?? []
   return {
     name: toClassName(`${name}-type`),
+    originalName: ['query', 'mutation'].includes(name) ? null : toClassName(name),
     type: GQLObjectType.INTERFACE,
     path: context.path,
     fields,
@@ -161,7 +165,13 @@ function extractInputType(def: gql.OperationDefinitionNode, context: Context): G
         nextContext(context, variableDef.variable.name.value),
       ),
     ) ?? []
-  return { name: 'RequestType', type: GQLObjectType.INTERFACE, path: context.path, fields }
+  return {
+    name: 'RequestType',
+    originalName: null,
+    type: GQLObjectType.INTERFACE,
+    path: context.path,
+    fields,
+  }
 }
 
 function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {

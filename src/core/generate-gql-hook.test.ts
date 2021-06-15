@@ -43,6 +43,7 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           name?: string
+					__typename?: 'User'
         }
 
         export function useUserQuery(
@@ -105,11 +106,13 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           name?: string
+					__typename?: 'User'
         }
 
         export interface TweetType {
           id: string
           content: string
+					__typename?: 'Tweet'
         }
 
         export function useUserAndTweetQuery(
@@ -163,6 +166,7 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           name?: string
+					__typename?: 'User'
         }
 
         export function useFollowersQuery(
@@ -218,6 +222,7 @@ describe('generateGQLHook', () => {
         export interface UserType {
           id: string
           status?: UserStatus
+					__typename?: 'User'
         }
 
         export enum UserStatus {
@@ -278,6 +283,7 @@ describe('generateGQLHook', () => {
         export interface UserType {
           id: string
           createdAt?: DateTime
+					__typename?: 'User'
         }
 
         export function useUserQuery(
@@ -331,6 +337,7 @@ describe('generateGQLHook', () => {
         export interface RegisterUserInputType {
           name: string
           email: string
+					__typename?: 'RegisterUserInput'
         }
 
         export interface MutationType {
@@ -341,6 +348,7 @@ describe('generateGQLHook', () => {
           id: string
           name?: string
           email?: string
+					__typename?: 'User'
         }
 
         export function useRegisterUserMutation(options?: MutationHookOptions<MutationType, RequestType>) {
@@ -388,6 +396,7 @@ describe('generateGQLHook', () => {
           id: string
           name?: string
           email?: string
+					__typename?: 'User'
         }
 
         export function useMeQuery(options?: QueryHookOptions<QueryType, void>) {
@@ -435,6 +444,7 @@ describe('generateGQLHook', () => {
           id: string
           name?: string
           email?: string
+					__typename?: 'User'
         }
 
         export function useMeQuery(options?: LazyQueryHookOptions<QueryType, void>) {
@@ -480,6 +490,7 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           name?: string
+					__typename?: 'User'
         }
 
         export function useUserQuery(
@@ -528,6 +539,7 @@ describe('generateGQLHook', () => {
 
         export interface UserType {
           id: string
+					__typename?: 'User'
         }
 
         export function useSignInMutation(options?: MutationHookOptions<MutationType, void>) {

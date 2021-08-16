@@ -375,6 +375,12 @@ export function useUserQuery(
 
 ## Query with date
 
+Declare DateTime type in `custom.d.ts` at the root of your project
+
+```ts
+declare type DateTime = string
+```
+
 ### From
 
 ```ts

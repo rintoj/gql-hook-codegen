@@ -358,6 +358,103 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate query with shared variable', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query fetchTweet($size: ImageSize) {
+          tweet {
+            id
+            author {
+              id
+              photo {
+                url(size: $size)
+              }
+            }
+            mentions {
+              id
+              photo {
+                url(size: $size)
+              }
+            }
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
+
+        const query = gql\`
+          query fetchTweet($id: ID!, $size: ImageSize) {
+            tweet(id: $id) {
+              id
+              author {
+                id
+                photo {
+                  url(size: $size)
+                }
+              }
+              mentions {
+                id
+                photo {
+                  url(size: $size)
+                }
+              }
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+          size?: ImageSize | undefined
+        }
+
+        export enum ImageSize {
+          SMALL = 'SMALL',
+          NORMAL = 'NORMAL',
+          LARGE = 'LARGE',
+        }
+
+        export interface QueryType {
+          tweet?: TweetType
+        }
+
+        export interface TweetType {
+          id: string
+          author: UserType
+          mentions?: UserType[]
+          __typename?: 'Tweet'
+        }
+
+        export interface UserType {
+          id: string
+          photo?: ImageType
+          __typename?: 'User'
+        }
+
+        export interface ImageType {
+          url: string
+          __typename?: 'Image'
+        }
+
+        export function useTweetQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+            ...options,
+          })
+        }
+    `),
+    )
+  })
+
   test('should generate query with no request type if query has no parameters', () => {
     const query = `
       import gql from 'graphql-tag'

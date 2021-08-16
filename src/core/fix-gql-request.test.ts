@@ -229,6 +229,50 @@ describe('fixGQLRequest', () => {
     )
   })
 
+  test('should work with common variable', () => {
+    const query = `
+      query fetchTweet($size: ImageSize) {
+        tweet {
+          id
+          author {
+            id
+            photo {
+              url(size: $size)
+            }
+          }
+          mentions {
+            id
+            photo {
+              url(size: $size)
+            }
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
+        query fetchTweet($id: ID!, $size: ImageSize) {
+          tweet(id: $id) {
+            id
+            author {
+              id
+              photo {
+                url(size: $size)
+              }
+            }
+            mentions {
+              id
+              photo {
+                url(size: $size)
+              }
+            }
+          }
+        }
+      `),
+    )
+  })
+
   test('should throw an error if invalid selector is used in a query', () => {
     const query = `
       query {

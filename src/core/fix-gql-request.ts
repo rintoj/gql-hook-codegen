@@ -2,13 +2,13 @@ import * as gql from 'graphql'
 import { DocumentNode } from 'graphql'
 import { toCamelCase, toClassName } from 'name-util'
 import {
-  findField,
   findDeepType,
+  findField,
   findObjectType,
+  findSchemaType,
   inputValueDefToVariable,
   inputValueDefToVariableDef,
   isScalarType,
-  findSchemaType,
 } from './graphql-util'
 
 interface Context {
@@ -119,11 +119,20 @@ function toOperationName(def: gql.OperationDefinitionNode) {
   }
 }
 
+function toVariableDefinitions(context: Context): Array<gql.VariableDefinitionNode> {
+  const uniqueVariables = Object.values(
+    Object.fromEntries(context.variables.map(def => [def.name.value, def])),
+  )
+  return uniqueVariables.map(inputValueDefToVariableDef)
+}
+
 function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
   if (def.kind === gql.Kind.OPERATION_DEFINITION) {
     const type = def.operation
     const context = { schema, path: [], variables: [] }
     const operationDef = findObjectType(schema, toClassName(type))
+    const selectionSet = parseSelectionSet(def.selectionSet, operationDef, context)
+    const variableDefinitions = toVariableDefinitions(context)
     return {
       ...def,
       name: {
@@ -131,8 +140,8 @@ function parseOperationDef(schema: DocumentNode, def: gql.DefinitionNode) {
         ...def.name,
         value: def.name?.value ?? toOperationName(def),
       },
-      selectionSet: parseSelectionSet(def.selectionSet, operationDef, context),
-      variableDefinitions: context.variables.map(inputValueDefToVariableDef),
+      selectionSet,
+      variableDefinitions,
     }
   }
   return def

@@ -9,6 +9,7 @@ type Tweet {
   id: ID!
   content: String!
   author: User!
+  mentions: [User]
 }
 
 type User {
@@ -22,6 +23,7 @@ type User {
   followers(limit: Int): [User]!
   createdAt: DateTime
   updatedAt: DateTime
+  photo: Image
 }
 
 input RegisterUserInput {
@@ -44,4 +46,14 @@ type Mutation {
 
 type Subscription {
   onUserChange(id: ID!): User!
+}
+
+enum ImageSize {
+  SMALL
+  NORMAL
+  LARGE
+}
+
+type Image {
+  url(size: ImageSize): String!
 }

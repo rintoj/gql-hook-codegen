@@ -1,5 +1,5 @@
 import * as gql from 'graphql'
-import { toClassName } from 'name-util'
+import { toClassName, toCamelCase } from 'name-util'
 import { ById, md5Hex } from '../util/util'
 import { findField as findNullableField, findSchemaType, isScalarType } from './graphql-util'
 
@@ -15,6 +15,7 @@ export enum GQLObjectType {
   INTERFACE = 'INTERFACE',
   ENUM = 'ENUM',
   SCALAR = 'SCALAR',
+  UNION = 'UNION',
 }
 
 export interface GQLType {
@@ -24,6 +25,7 @@ export interface GQLType {
   type: GQLObjectType
   path: string[]
   fields: GQLField[]
+  types?: GQLType[]
 }
 
 interface Context {
@@ -88,7 +90,7 @@ function extractGQLField(
   context: Context,
 ): GQLField {
   if (field.kind !== gql.Kind.FIELD && field.kind !== gql.Kind.INPUT_VALUE_DEFINITION) {
-    throw new Error('Invalid field!')
+    throw new Error(`Invalid field type ${field.kind}!`)
   }
   const fieldDef = findField(parentObjectDef, field.name.value, context)
   return extractGQLFieldType(
@@ -116,6 +118,31 @@ function extractEnumType(objectDef: gql.EnumTypeDefinitionNode, context: Context
   }
 }
 
+function extractUnionType(
+  objectDef: gql.UnionTypeDefinitionNode,
+  selectionSet: gql.SelectionSetNode | undefined,
+  context: Context,
+): GQLType {
+  const types = (selectionSet?.selections ?? []).map((type: gql.SelectionNode) => {
+    if (type.kind !== gql.Kind.INLINE_FRAGMENT) {
+      throw new Error(`Expecting an inline fragment in union type ${objectDef.name.value}!`)
+    }
+    const name = type.typeCondition?.name.value
+    if (!name) {
+      throw new Error('Invalid inline fragment - missing `typeCondition`!')
+    }
+    return extractGQLType(name, type.selectionSet, nextContext(context, toCamelCase(name)))
+  })
+  return {
+    name: toClassName(`${objectDef.name.value}-type`),
+    originalName: null,
+    type: GQLObjectType.UNION,
+    path: context.path,
+    fields: [],
+    types,
+  }
+}
+
 function extractScalarType(objectDef: gql.ScalarTypeDefinitionNode, context: Context): GQLType {
   return {
     name: objectDef.name.value,
@@ -137,6 +164,9 @@ function extractGQLType(
   }
   if (def.kind === gql.Kind.ENUM_TYPE_DEFINITION) {
     return extractEnumType(def, context)
+  }
+  if (def.kind === gql.Kind.UNION_TYPE_DEFINITION) {
+    return extractUnionType(def, selectionSet, context)
   }
   if (def.kind === gql.Kind.SCALAR_TYPE_DEFINITION) {
     return extractScalarType(def, context)
@@ -201,10 +231,42 @@ function deduplicateGQLTypeName(gqlType: GQLType, context: DeduplicateContext) {
   return name
 }
 
-function deduplicateGQLType(gqlType: GQLType, context: DeduplicateContext): GQLType[] {
+function deduplicateUnionType(gqlType: GQLType, context: DeduplicateContext): GQLType[] {
   let gqlTypes: GQLType[] = []
+  const fields = (gqlType.types ?? []).map(type => {
+    const name = typeof type === 'string' ? type : type.name
+    const schemaType = typeof type === 'string' ? type : (type.originalName as string)
+    return {
+      name: name,
+      type: name,
+      schemaType,
+    }
+  })
+  gqlType.types?.map(type => {
+    if (typeof type !== 'string') {
+      const deduplicatedGQLTypes = deduplicateGQLType(type, context)
+      gqlTypes = gqlTypes.concat(deduplicatedGQLTypes)
+    }
+  })
+  return [
+    {
+      name: gqlType.name,
+      originalName: null,
+      type: GQLObjectType.UNION,
+      path: gqlType.path,
+      fields,
+    },
+    ...gqlTypes,
+  ]
+}
+
+function deduplicateGQLType(gqlType: GQLType, context: DeduplicateContext): GQLType[] {
   const name = deduplicateGQLTypeName(gqlType, context)
-  const fields = gqlType.fields.map(field => {
+  if (gqlType.type === GQLObjectType.UNION) {
+    return deduplicateUnionType(gqlType, context)
+  }
+  let gqlTypes: GQLType[] = []
+  const fields = gqlType.fields?.map(field => {
     if (typeof field.type !== 'string') {
       const deduplicatedGQLTypes = deduplicateGQLType(field.type, context)
       gqlTypes = gqlTypes.concat(deduplicatedGQLTypes)

@@ -377,4 +377,62 @@ describe('fixGQLRequest', () => {
       `),
     )
   })
+
+  test('should work with union', () => {
+    const query = `
+      query {
+        myNotifications {
+          ... on FollowNotification {
+            id
+            user {
+              id
+              photo {
+                url
+              }
+            }
+          }
+          ... on TweetNotification {
+            id
+            tweet {
+              id
+              author {
+                photo {
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    `
+    const fixedQuery = fixGQLRequest(schema, query)
+    expect(trimPaddingAndEmptyLines(fixedQuery)).toEqual(
+      trimPaddingAndEmptyLines(`
+        query fetchMyNotifications($size: ImageSize, $myNotificationsTweetAuthorPhotoSize: ImageSize) {
+          myNotifications {
+            ... on FollowNotification {
+              id
+              user {
+                id
+                photo {
+                  url(size: $size)
+                }
+              }
+            }
+            ... on TweetNotification {
+              id
+              tweet {
+                id
+                author {
+                  photo {
+                    url(size: $myNotificationsTweetAuthorPhotoSize)
+                  }
+                }
+              }
+            }
+          }
+        }
+      `),
+    )
+  })
 })

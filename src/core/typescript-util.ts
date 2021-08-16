@@ -279,3 +279,17 @@ export function createEnum({ name, fields }: GQLType) {
     ),
   )
 }
+
+export function createUnion({ name, fields }: GQLType) {
+  return ts.factory.createTypeAliasDeclaration(
+    undefined,
+    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    ts.factory.createIdentifier(name),
+    undefined,
+    ts.factory.createUnionTypeNode(
+      fields.map(field =>
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(field.name), undefined),
+      ),
+    ),
+  )
+}

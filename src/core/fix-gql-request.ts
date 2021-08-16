@@ -83,10 +83,9 @@ function parseSelection(
       selection.arguments ?? [],
       variableMap,
     )
-    const selectionSet =
-      selection.selectionSet && objectType?.kind === gql.Kind.OBJECT_TYPE_DEFINITION
-        ? parseSelectionSet(selection.selectionSet, objectType, context)
-        : undefined
+    const selectionSet = selection.selectionSet
+      ? parseSelectionSet(selection.selectionSet, objectType as any, context)
+      : undefined
     return {
       ...selection,
       arguments: argumentList,
@@ -101,9 +100,20 @@ function parseSelectionSet(
   operationDef: gql.ObjectTypeDefinitionNode,
   context: Context,
 ): gql.SelectionSetNode {
-  const selections = selectionSet.selections.map(field =>
-    parseSelection(field, operationDef, context),
-  )
+  const selections = selectionSet.selections.map(field => {
+    if (field.kind === gql.Kind.INLINE_FRAGMENT) {
+      const objectType = findSchemaType(context.schema, field.typeCondition?.name.value as string)
+      return {
+        ...field,
+        selectionSet: parseSelectionSet(
+          field.selectionSet,
+          objectType as gql.ObjectTypeDefinitionNode,
+          context,
+        ),
+      }
+    }
+    return parseSelection(field, operationDef, context)
+  })
   return { ...selectionSet, selections }
 }
 

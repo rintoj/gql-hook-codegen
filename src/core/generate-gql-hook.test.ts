@@ -645,4 +645,128 @@ describe('generateGQLHook', () => {
     `),
     )
   })
+
+  test('should generate query with union', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query fetchMyNotifications($size: ImageSize) {
+          myNotifications {
+            ... on FollowNotification {
+              id
+              user {
+                id
+                photo {
+                  url(size: $size)
+                }
+              }
+            }
+            ... on TweetNotification {
+              id
+              tweet {
+                id
+                author {
+                  id
+                  photo {
+                    url(size: $size)
+                  }
+                }
+              }
+            }
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, prettierOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import gql from 'graphql-tag'
+        import { QueryHookOptions, useQuery } from '@apollo/client'
+
+        const query = gql\`
+          query fetchMyNotifications($size: ImageSize) {
+            myNotifications {
+              ... on FollowNotification {
+                id
+                user {
+                  id
+                  photo {
+                    url(size: $size)
+                  }
+                }
+              }
+              ... on TweetNotification {
+                id
+                tweet {
+                  id
+                  author {
+                    id
+                    photo {
+                      url(size: $size)
+                    }
+                  }
+                }
+              }
+            }
+          }
+        \`
+
+        export interface RequestType {
+          size?: ImageSize | undefined
+        }
+
+        export enum ImageSize {
+          SMALL = 'SMALL',
+          NORMAL = 'NORMAL',
+          LARGE = 'LARGE',
+        }
+
+        export interface QueryType {
+          myNotifications: NotificationType[]
+        }
+
+        export type NotificationType = FollowNotificationType | TweetNotificationType
+
+        export interface FollowNotificationType {
+          id: string
+          user: UserType
+          __typename?: 'FollowNotification'
+        }
+
+        export interface UserType {
+          id: string
+          photo?: ImageType
+          __typename?: 'User'
+        }
+
+        export interface ImageType {
+          url: string
+          __typename?: 'Image'
+        }
+
+        export interface TweetNotificationType {
+          id: string
+          tweet: TweetType
+          __typename?: 'TweetNotification'
+        }
+
+        export interface TweetType {
+          id: string
+          author: UserType
+          __typename?: 'Tweet'
+        }
+
+        export function useMyNotificationsQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            ...options,
+          })
+        }
+    `),
+    )
+  })
 })

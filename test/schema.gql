@@ -36,6 +36,7 @@ type Query {
   user(id: ID!): User
   tweet(id: ID!): Tweet
   followers(id: ID!, limit: Int): [User]!
+  myNotifications: [Notification]!
 }
 
 type Mutation {
@@ -57,3 +58,16 @@ enum ImageSize {
 type Image {
   url(size: ImageSize): String!
 }
+
+type FollowNotification {
+  id: ID!
+  user: User!
+  following: Boolean!
+}
+
+type TweetNotification {
+  id: ID!
+  tweet: Tweet!
+}
+
+union Notification = FollowNotification | TweetNotification

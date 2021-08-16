@@ -478,6 +478,201 @@ describe('extractGQLTypes', () => {
     ])
   })
 
+  test('should extract types union type', () => {
+    const request: any = parseSchema(`
+      query fetchMyNotifications($size: ImageSize) {
+        myNotifications {
+          ... on FollowNotification {
+            id
+            user {
+              id
+              photo {
+                url(size: $size)
+              }
+            }
+          }
+          ... on TweetNotification {
+            id
+            tweet {
+              id
+              author {
+                id
+                photo {
+                  url(size: $size)
+                }
+              }
+            }
+          }
+        }
+      }
+    `)
+    const types = extractGQLTypes(schema, request.definitions[0])
+    expect(types).toEqual([
+      {
+        name: 'RequestType',
+        originalName: null,
+        type: 'INTERFACE',
+        path: ['variables'],
+        fields: [
+          {
+            name: 'size',
+            type: 'ImageSize',
+            schemaType: 'ImageSize',
+          },
+        ],
+      },
+      {
+        name: 'ImageSize',
+        originalName: null,
+        type: 'ENUM',
+        path: ['variables', 'size'],
+        fields: [
+          {
+            name: 'SMALL',
+            type: 'SMALL',
+            schemaType: 'SMALL',
+          },
+          {
+            name: 'NORMAL',
+            type: 'NORMAL',
+            schemaType: 'NORMAL',
+          },
+          {
+            name: 'LARGE',
+            type: 'LARGE',
+            schemaType: 'LARGE',
+          },
+        ],
+      },
+      {
+        name: 'QueryType',
+        originalName: null,
+        type: 'INTERFACE',
+        path: ['query'],
+        fields: [
+          {
+            name: 'myNotifications',
+            type: 'NotificationType',
+            schemaType: 'Notification',
+            isArray: true,
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'NotificationType',
+        originalName: null,
+        type: 'UNION',
+        path: ['query', 'myNotifications'],
+        fields: [
+          {
+            name: 'FollowNotificationType',
+            type: 'FollowNotificationType',
+            schemaType: 'FollowNotification',
+          },
+          {
+            name: 'TweetNotificationType',
+            type: 'TweetNotificationType',
+            schemaType: 'TweetNotification',
+          },
+        ],
+      },
+      {
+        name: 'FollowNotificationType',
+        originalName: 'FollowNotification',
+        type: 'INTERFACE',
+        path: ['query', 'myNotifications', 'followNotification'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'user',
+            type: 'UserType',
+            schemaType: 'User',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'UserType',
+        originalName: 'User',
+        type: 'INTERFACE',
+        path: ['query', 'myNotifications', 'tweetNotification', 'tweet', 'author'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'photo',
+            type: 'ImageType',
+            schemaType: 'Image',
+          },
+        ],
+      },
+      {
+        name: 'ImageType',
+        originalName: 'Image',
+        type: 'INTERFACE',
+        path: ['query', 'myNotifications', 'tweetNotification', 'tweet', 'author', 'photo'],
+        fields: [
+          {
+            name: 'url',
+            type: 'String',
+            schemaType: 'String',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'TweetNotificationType',
+        originalName: 'TweetNotification',
+        type: 'INTERFACE',
+        path: ['query', 'myNotifications', 'tweetNotification'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'tweet',
+            type: 'TweetType',
+            schemaType: 'Tweet',
+            isNonNull: true,
+          },
+        ],
+      },
+      {
+        name: 'TweetType',
+        originalName: 'Tweet',
+        type: 'INTERFACE',
+        path: ['query', 'myNotifications', 'tweetNotification', 'tweet'],
+        fields: [
+          {
+            name: 'id',
+            type: 'ID',
+            schemaType: 'ID',
+            isNonNull: true,
+          },
+          {
+            name: 'author',
+            type: 'UserType',
+            schemaType: 'User',
+            isNonNull: true,
+          },
+        ],
+      },
+    ])
+  })
+
   test('should throw an error if an invalid query is used in the request', () => {
     const request: any = parseSchema(`
       query ($tweetId: ID!, $userId: ID!) {

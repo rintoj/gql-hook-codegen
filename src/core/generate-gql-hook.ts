@@ -12,6 +12,7 @@ import {
   createImportStatement,
   createInterface,
   createNamedImports,
+  createUnion,
   parseTS,
   printTS,
   selectTSNode,
@@ -298,6 +299,8 @@ function generateHookForOperation(
         return createInterface(dataType, dataType.name === 'RequestType' && operation === 'query')
       } else if (dataType.type === GQLObjectType.ENUM) {
         return createEnum(dataType)
+      } else if (dataType.type === GQLObjectType.UNION) {
+        return createUnion(dataType)
       }
     })
 

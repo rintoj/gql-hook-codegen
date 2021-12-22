@@ -62,7 +62,7 @@ export async function generate(options: Options) {
       await processFile(schema, file)
     }
     renderText('Done!', 'green')
-  } catch (e) {
+  } catch (e: any) {
     console.error(red(e.message))
   }
 }

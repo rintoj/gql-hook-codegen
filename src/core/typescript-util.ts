@@ -190,7 +190,11 @@ export function createNamedImportStatement(imports: string[], file: string) {
       undefined,
       ts.factory.createNamedImports(
         imports.map(importItem =>
-          ts.factory.createImportSpecifier(undefined, ts.factory.createIdentifier(importItem)),
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier(importItem),
+          ),
         ),
       ),
     ),

@@ -20,7 +20,7 @@ export function cli(args: any) {
           pattern: argv.pattern,
           schemaFile: argv.schemaFile as string,
           schemaURL: argv.schemaURL as string,
-          package: argv.package as string,
+          packageName: argv.package as string,
           ignore: (argv?.ignore as string)?.split(','),
           save: argv.save as boolean,
         })

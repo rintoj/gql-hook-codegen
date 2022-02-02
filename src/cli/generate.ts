@@ -11,7 +11,7 @@ interface Options {
   pattern: string
   schemaFile?: string
   schemaURL?: string
-  package?: string
+  packageName: string
   ignore?: string[]
   save?: boolean
 }
@@ -30,11 +30,10 @@ async function readFile(file: string) {
   )
 }
 
-async function processFile(schema: DocumentNode, file: string) {
-  renderStatus(file, 'Processing', 'yellow')
+async function processFile(schema: DocumentNode, file: string, packageName: string) {
   const tsContent = await readFile(file)
   const idBefore = md5Hex(tsContent)
-  const hook = generateGQLHook(schema, tsContent, prettierOptions)
+  const hook = generateGQLHook(schema, tsContent, { prettierOptions, packageName })
   const idAfter = md5Hex(hook)
   if (idBefore === idAfter) {
     renderStatus(file, 'NO CHANGE', 'gray')
@@ -67,7 +66,7 @@ export async function generate(options: Options) {
     }
 
     for (const file of files) {
-      await processFile(schema, file)
+      await processFile(schema, file, options.packageName)
     }
     renderText('Done!', 'green')
   } catch (e: any) {

@@ -20,6 +20,7 @@ import {
 
 interface Context {
   imports: ById<string[]>
+  packageName: string
 }
 
 function createQueryHook({
@@ -304,7 +305,8 @@ function generateHookForOperation(
       }
     })
 
-    const imports = context.imports['@apollo/client'] ?? (context.imports['@apollo/client'] = [])
+    const imports =
+      context.imports[context.packageName] ?? (context.imports[context.packageName] = [])
     imports.push(optionsName)
     imports.push(reactHookName)
 
@@ -337,15 +339,20 @@ function sortImportsByFilename(import1: ts.ImportDeclaration, import2: ts.Import
   )
 }
 
+interface GenerateGQLHookOptions {
+  prettierOptions?: Options
+  packageName: string
+}
+
 export function generateGQLHook(
   schema: gql.DocumentNode,
   tsContent: string,
-  prettierOptions?: Options,
+  options: GenerateGQLHookOptions = { packageName: '@apollo/client' },
 ): string {
   const request = extractGQL(tsContent)
   const fixedQuery = fixGQLRequest(schema, request.gql)
   const requestDoc = parseSchema(fixedQuery)
-  const context = { imports: {} }
+  const context = { imports: {}, packageName: options.packageName }
 
   const statements: ts.Statement[] = reduceToFlatArray(
     requestDoc.definitions as gql.DefinitionNode[],
@@ -363,5 +370,5 @@ export function generateGQLHook(
     blankLinesBetweenStatements: true,
   })
 
-  return format([imports, content].join('\n\n'), prettierOptions)
+  return format([imports, content].join('\n\n'), options.prettierOptions)
 }

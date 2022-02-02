@@ -2,8 +2,7 @@ import { red, yellow } from 'chalk'
 import { sync } from 'fast-glob'
 import * as fs from 'fs-extra'
 import { DocumentNode, print } from 'graphql'
-import { resolve } from 'path'
-import { generateGQLHook } from '../core'
+import { generateGQLHook, getPrettierOptions } from '../core'
 import { fetchLocalSchema, fetchRemoteSchema } from '../util/fetch-schema'
 import { md5Hex } from '../util/util'
 import { renderNewLine, renderStatus, renderText } from './render-status'
@@ -17,10 +16,7 @@ interface Options {
   save?: boolean
 }
 
-const prettierOptions = {
-  ...JSON.parse(fs.readFileSync(resolve(process.cwd(), '.prettierrc'), 'utf8')),
-  parser: 'typescript',
-}
+const prettierOptions = getPrettierOptions()
 
 async function writeFile(file: string, content: string) {
   return await new Promise<void>((resolve, reject) =>

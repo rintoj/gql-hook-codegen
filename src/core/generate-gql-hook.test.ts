@@ -22,8 +22,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchUser($id: ID!) {
@@ -79,8 +79,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchUserAndTweet($id: ID!, $tweetId: ID!) {
@@ -144,8 +144,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchFollowers($id: ID!, $limit: Int) {
@@ -199,8 +199,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchUser($id: ID!) {
@@ -260,8 +260,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchUser($id: ID!) {
@@ -317,8 +317,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { MutationHookOptions, useMutation } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const mutation = gql\`
           mutation registerUser($input: RegisterUserInput!) {
@@ -385,8 +385,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchTweet($id: ID!, $size: ImageSize) {
@@ -472,8 +472,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query me {
@@ -520,8 +520,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const lazyQuery = gql\`
           query me {
@@ -566,8 +566,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const lazyQuery = gql\`
           query fetchUser($id: ID!) {
@@ -619,8 +619,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { MutationHookOptions, useMutation } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const mutation = gql\`
           mutation signIn {
@@ -681,8 +681,8 @@ describe('generateGQLHook', () => {
     const hook = generateGQLHook(schema, query, prettierOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
-        import gql from 'graphql-tag'
         import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
 
         const query = gql\`
           query fetchMyNotifications($size: ImageSize) {

@@ -331,6 +331,12 @@ function generateHookForOperation(
   return []
 }
 
+function sortImportsByFilename(import1: ts.ImportDeclaration, import2: ts.ImportDeclaration) {
+  return (import1.moduleSpecifier as ts.StringLiteral).text.localeCompare(
+    (import2.moduleSpecifier as ts.StringLiteral).text,
+  )
+}
+
 export function generateGQLHook(
   schema: gql.DocumentNode,
   tsContent: string,
@@ -347,7 +353,9 @@ export function generateGQLHook(
   ) as any
 
   const imports = createTSContent(
-    [createImportStatement('gql', 'graphql-tag'), ...createNamedImports(context.imports)],
+    [createImportStatement('gql', 'graphql-tag'), ...createNamedImports(context.imports)].sort(
+      sortImportsByFilename,
+    ),
     { blankLinesBetweenStatements: false },
   )
 

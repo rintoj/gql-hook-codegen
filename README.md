@@ -50,45 +50,15 @@ type Query {
 
 Step 3: Run the following code:
 
-```ts
-import { generateGQLHook } from 'gql-hook-codegen'
-import { readFile } from 'fs-extra'
-import * as gql from 'graphql'
-
-const prettierOptions = {
-  parser: 'typescript',
-}
-
-async function fetchLocalSchema(file: string): Promise<gql.DocumentNode> {
-  const content = await readFile(file, 'utf8')
-  return gql.parse(content)
-}
-
-async function processFile(schema: DocumentNode, file: string) {
-  try {
-    const tsContent = await readFile(file, 'utf8')
-    const hook = generateGQLHook(schema, tsContent, prettierOptions)
-    await writeFile(file, hook)
-  } catch (e) {
-    console.error(`${file} - [FAILED] - ${e.message}`)
-    return false
-  }
-  return true
-}
-
-async function run() {
-  const schema = await fetchLocalSchema('./schema.gql')
-  await processFile(schema, './src/use-user.gql.ts')
-}
-
-run().catch(error => console.error(error))
+```sh
+npx gql-hook-codegen generate --schemaFile './schema.gql'
 ```
 
 Step 4: Script will update `use-user.gql.ts` to the following:
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchUser($id: ID!) {
@@ -123,15 +93,41 @@ export function useUserQuery(
 }
 ```
 
-[More Examples](./docs/examples.md)
+## More Examples
+
+<!-- vscode-markdown-toc -->
+1. [Schema](./docs/examples.md#Schema)
+2. [Query](./docs/examples.md#Query)
+3. [Query with no parameters](./docs/examples.md#Querywithnoparameters)
+4. [Batched Queries](./docs/examples.md#BatchedQueries)
+5. [Query with multiple inputs](./docs/examples.md#Querywithmultipleinputs)
+6. [Query with enum](./docs/examples.md#Querywithenum)
+7. [Query with date](./docs/examples.md#Querywithdate)
+8. [Query with shared variable](./docs/examples.md#Querywithsharedvariable)
+9. [Mutation](./docs/examples.md#Mutation)
+10. [Lazy query](./docs/examples.md#Lazyquery)
+11. [Query with union](./docs/examples.md#Querywithunion)
 
 ## Usage
 
 ```sh
-gql-hook-codegen generate [src/**/*.gql.ts]
-  [--schema FILE]
-  [--graphqlURL URL]
-  [--save]
+gql-hook-codegen <command>
+
+Commands:
+  gql-hook-codegen generate [pattern]  Generate graphql query, mutation or
+                                       subscription react hook in TypeScript
+
+Options:
+      --help        Show help                                          [boolean]
+      --version     Show version number                                [boolean]
+  -f, --schemaFile  Schema file               [string] [default: "./schema.gql"]
+  -u, --schemaURL   URL to fetch graphql schema                         [string]
+  -i, --ignore      Folders to ignore eg: "node_modules,lib"
+                                              [string] [default: "node_modules"]
+  -p, --package     Package name to use in generated code
+                                            [string] [default: "@apollo/client"]
+  -s, --save        Save schema locally if --schemaURL is used         [boolean]
+  -v, --verbose     Run with verbose logging                           [boolean]
 ```
 
 ## Automatic Release

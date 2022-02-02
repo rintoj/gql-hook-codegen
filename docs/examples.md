@@ -1,6 +1,46 @@
+
 # Examples
 
-## Schema
+<!-- vscode-markdown-toc -->
+* 1. [Schema](#Schema)
+* 2. [Query](#Query)
+	* 2.1. [From](#From)
+	* 2.2. [To](#To)
+* 3. [Query with no parameters](#Querywithnoparameters)
+	* 3.1. [From](#From-1)
+	* 3.2. [To](#To-1)
+* 4. [Batched Queries](#BatchedQueries)
+	* 4.1. [From](#From-1)
+	* 4.2. [To](#To-1)
+* 5. [Query with multiple inputs](#Querywithmultipleinputs)
+	* 5.1. [From](#From-1)
+	* 5.2. [To](#To-1)
+* 6. [Query with enum](#Querywithenum)
+	* 6.1. [From](#From-1)
+	* 6.2. [To](#To-1)
+* 7. [Query with date](#Querywithdate)
+	* 7.1. [From](#From-1)
+	* 7.2. [To](#To-1)
+* 8. [Query with shared variable](#Querywithsharedvariable)
+	* 8.1. [From](#From-1)
+	* 8.2. [To](#To-1)
+* 9. [Mutation](#Mutation)
+	* 9.1. [From](#From-1)
+	* 9.2. [To](#To-1)
+* 10. [Lazy query](#Lazyquery)
+	* 10.1. [From](#From-1)
+	* 10.2. [To](#To-1)
+* 11. [Query with union](#Querywithunion)
+	* 11.1. [From](#From-1)
+	* 11.2. [To](#To-1)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+
+##  1. <a name='Schema'></a>Schema
 
 ```gql
 scalar DateTime
@@ -78,9 +118,9 @@ type TweetNotification {
 union Notification = FollowNotification | TweetNotification
 ```
 
-## Query
+##  2. <a name='Query'></a>Query
 
-### From
+###  2.1. <a name='From'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -94,11 +134,11 @@ const query = gql`
 `
 ```
 
-### To
+###  2.2. <a name='To'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchUser($id: ID!) {
@@ -133,9 +173,9 @@ export function useUserQuery(
 }
 ```
 
-## Query with no parameters
+##  3. <a name='Querywithnoparameters'></a>Query with no parameters
 
-### From
+###  3.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -151,11 +191,11 @@ const query = gql`
 `
 ```
 
-### To
+###  3.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query me {
@@ -183,9 +223,9 @@ export function useMeQuery(options?: QueryHookOptions<QueryType, void>) {
 }
 ```
 
-## Batched Queries
+##  4. <a name='BatchedQueries'></a>Batched Queries
 
-### From
+###  4.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -203,11 +243,11 @@ const query = gql`
 `
 ```
 
-### To
+###  4.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchUserAndTweet($id: ID!, $tweetId: ID!) {
@@ -254,9 +294,9 @@ export function useUserAndTweetQuery(
 }
 ```
 
-## Query with multiple inputs
+##  5. <a name='Querywithmultipleinputs'></a>Query with multiple inputs
 
-### From
+###  5.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -270,11 +310,11 @@ const query = gql`
 `
 ```
 
-### To
+###  5.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchFollowers($id: ID!, $limit: Int) {
@@ -310,9 +350,9 @@ export function useFollowersQuery(
 }
 ```
 
-## Query with enum
+##  6. <a name='Querywithenum'></a>Query with enum
 
-### From
+###  6.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -327,11 +367,11 @@ const query = gql`
 `
 ```
 
-### To
+###  6.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchUser($id: ID!) {
@@ -373,7 +413,7 @@ export function useUserQuery(
 }
 ```
 
-## Query with date
+##  7. <a name='Querywithdate'></a>Query with date
 
 Declare DateTime type in `custom.d.ts` at the root of your project
 
@@ -381,7 +421,7 @@ Declare DateTime type in `custom.d.ts` at the root of your project
 declare type DateTime = string
 ```
 
-### From
+###  7.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -396,11 +436,11 @@ const query = gql`
 `
 ```
 
-### To
+###  7.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchUser($id: ID!) {
@@ -437,9 +477,9 @@ export function useUserQuery(
 }
 ```
 
-## Query with shared variable
+##  8. <a name='Querywithsharedvariable'></a>Query with shared variable
 
-### From
+###  8.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -465,11 +505,11 @@ const query = gql`
 `
 ```
 
-### To
+###  8.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql\`
   query fetchTweet($id: ID!, $size: ImageSize) {
@@ -536,9 +576,9 @@ export function useTweetQuery(
 }
 ```
 
-## Mutation
+##  9. <a name='Mutation'></a>Mutation
 
-### From
+###  9.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -554,11 +594,11 @@ const mutation = gql`
 `
 ```
 
-### To
+###  9.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { MutationHookOptions, useMutation } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const mutation = gql`
   mutation registerUser($input: RegisterUserInput!) {
@@ -596,9 +636,9 @@ export function useRegisterUserMutation(options?: MutationHookOptions<MutationTy
 }
 ```
 
-## Lazy query
+##  10. <a name='Lazyquery'></a>Lazy query
 
-### From
+###  10.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -614,11 +654,11 @@ const lazyQuery = gql`
 `
 ```
 
-### To
+###  10.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const lazyQuery = gql`
   query me {
@@ -646,9 +686,9 @@ export function useMeQuery(options?: LazyQueryHookOptions<QueryType, void>) {
 }
 ```
 
-## Query with union
+##  11. <a name='Querywithunion'></a>Query with union
 
-### From
+###  11.1. <a name='From-1'></a>From
 
 ```ts
 import gql from 'graphql-tag'
@@ -682,11 +722,11 @@ const query = gql`
 `
 ```
 
-### To
+###  11.2. <a name='To-1'></a>To
 
 ```ts
-import gql from 'graphql-tag'
 import { QueryHookOptions, useQuery } from '@apollo/client'
+import gql from 'graphql-tag'
 
 const query = gql`
   query fetchMyNotifications($size: ImageSize) {

@@ -4,7 +4,10 @@
   "description": "A utility to generate graphql hook from query string and schema",
   "main": "lib/index.js",
   "bin": {
-    "gql-hook-codegen": "lib/cli/index.js"
+    "gql-hook-codegen": "bin/gql-hook-codegen"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "rimraf lib && tsc",
@@ -18,9 +21,11 @@
     "url": "https://github.com/rintoj/gql-hook-codegen"
   },
   "keywords": [
+    "cli",
     "GraphQL",
     "React",
-    "Hooks"
+    "Hooks",
+    "codegen"
   ],
   "author": "Rinto Jose",
   "license": "MIT",
@@ -49,6 +54,7 @@
     "add": "^2.0.6",
     "chalk": "^4.1.1",
     "crypto": "^1.0.1",
+    "esm": "^3.2.25",
     "fast-glob": "^3.2.5",
     "fs-extra": "^10.0.0",
     "graphql": "^15.5.0",

@@ -1,17 +1,25 @@
-import { sync } from 'fast-glob'
 import { red, yellow } from 'chalk'
+import { sync } from 'fast-glob'
 import * as fs from 'fs-extra'
+import { DocumentNode, print } from 'graphql'
+import { resolve } from 'path'
 import { generateGQLHook } from '../core'
-import { print, DocumentNode } from 'graphql'
 import { fetchLocalSchema, fetchRemoteSchema } from '../util/fetch-schema'
 import { md5Hex } from '../util/util'
 import { renderNewLine, renderStatus, renderText } from './render-status'
 
 interface Options {
   pattern: string
-  graphqlURL?: string
-  schema?: string
-  saveSchema?: boolean
+  schemaFile?: string
+  schemaURL?: string
+  package?: string
+  ignore?: string[]
+  save?: boolean
+}
+
+const prettierOptions = {
+  ...JSON.parse(fs.readFileSync(resolve(process.cwd(), '.prettierrc'), 'utf8')),
+  parser: 'typescript',
 }
 
 async function writeFile(file: string, content: string) {
@@ -30,7 +38,7 @@ async function processFile(schema: DocumentNode, file: string) {
   renderStatus(file, 'Processing', 'yellow')
   const tsContent = await readFile(file)
   const idBefore = md5Hex(tsContent)
-  const hook = generateGQLHook(schema, tsContent)
+  const hook = generateGQLHook(schema, tsContent, prettierOptions)
   const idAfter = md5Hex(hook)
   if (idBefore === idAfter) {
     renderStatus(file, 'NO CHANGE', 'gray')
@@ -42,19 +50,23 @@ async function processFile(schema: DocumentNode, file: string) {
 }
 
 export async function generate(options: Options) {
-  const files = sync(options.pattern)
+  const files = sync(options.pattern, {
+    absolute: true,
+    onlyFiles: true,
+    ignore: options.ignore,
+  })
   if (!files.length) {
     console.log(yellow(`No files matching "${options.pattern}" found!`))
     return
   }
 
   try {
-    renderText(`Fetching schema from ${options.graphqlURL ?? options.schema}`, 'yellow')
-    const schema = options.graphqlURL
-      ? await fetchRemoteSchema(options.graphqlURL)
-      : await fetchLocalSchema(options.schema ?? 'schema.gql')
+    renderText(`Fetching schema from ${options.schemaURL ?? options.schemaFile}`, 'yellow')
+    const schema = options.schemaURL
+      ? await fetchRemoteSchema(options.schemaURL)
+      : await fetchLocalSchema(options.schemaFile ?? 'schema.gql')
 
-    if (options.graphqlURL && options.saveSchema) {
+    if (options.schemaURL && options.save) {
       writeFile('schema.gql', print(schema))
     }
 

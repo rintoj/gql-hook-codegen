@@ -5,7 +5,7 @@ import { DocumentNode, print } from 'graphql'
 import { generateGQLHook, getPrettierOptions } from '../core'
 import { fetchLocalSchema, fetchRemoteSchema } from '../util/fetch-schema'
 import { md5Hex } from '../util/util'
-import { renderNewLine, renderStatus, renderText } from './render-status'
+import { renderStatus, renderText } from './render-status'
 
 interface Options {
   pattern: string
@@ -31,22 +31,21 @@ async function readFile(file: string) {
 }
 
 async function processFile(schema: DocumentNode, file: string, packageName: string) {
+  renderStatus(file, 'Processing', 'yellow', false)
   const tsContent = await readFile(file)
   const idBefore = md5Hex(tsContent)
   const hook = generateGQLHook(schema, tsContent, { prettierOptions, packageName })
   const idAfter = md5Hex(hook)
   if (idBefore === idAfter) {
-    renderStatus(file, 'NO CHANGE', 'gray')
+    renderStatus(file, 'NO CHANGE', 'gray', true)
   } else {
     await writeFile(file, hook)
-    renderStatus(file, 'UPDATED', 'green')
-    renderNewLine()
+    renderStatus(file, 'UPDATED', 'green', true)
   }
 }
 
 export async function generate(options: Options) {
   const files = sync(options.pattern, {
-    absolute: true,
     onlyFiles: true,
     ignore: options.ignore,
   })

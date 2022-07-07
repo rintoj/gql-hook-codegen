@@ -214,6 +214,70 @@ function createMutationHook({
   )
 }
 
+function createSubscriptionHook({
+  hookName,
+  responseType,
+  reactHookName,
+  gqlVariableName,
+  hasVariables,
+}: {
+  hookName: string
+  responseType: string
+  reactHookName: string
+  gqlVariableName: string
+  hasVariables?: boolean
+}) {
+  return ts.factory.createFunctionDeclaration(
+    undefined,
+    [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+    undefined,
+    ts.factory.createIdentifier(hookName),
+    undefined,
+    [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('options'),
+        ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('SubscriptionHookOptions'), [
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier('SubscriptionType'),
+            undefined,
+          ),
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+            undefined,
+          ),
+        ]),
+        undefined,
+      ),
+    ],
+    undefined,
+    ts.factory.createBlock(
+      [
+        ts.factory.createReturnStatement(
+          ts.factory.createCallExpression(
+            ts.factory.createIdentifier(reactHookName),
+            [
+              ts.factory.createTypeReferenceNode(
+                ts.factory.createIdentifier(responseType),
+                undefined,
+              ),
+              ts.factory.createTypeReferenceNode(
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+                undefined,
+              ),
+            ],
+            [ts.factory.createIdentifier(gqlVariableName), ts.factory.createIdentifier('options')],
+          ),
+        ),
+      ],
+      true,
+    ),
+  )
+}
+
 function createTSContent(
   statements: ts.Statement[],
   options?: { blankLinesBetweenStatements: boolean },
@@ -321,7 +385,15 @@ function generateHookForOperation(
             requiredRequestVariables,
             hasVariables: hasRequestVariables(dataTypes),
           })
-        : createMutationHook({
+        : def.operation === 'mutation'
+        ? createMutationHook({
+            hookName,
+            responseType,
+            reactHookName,
+            gqlVariableName,
+            hasVariables: hasRequestVariables(dataTypes),
+          })
+        : createSubscriptionHook({
             hookName,
             responseType,
             reactHookName,

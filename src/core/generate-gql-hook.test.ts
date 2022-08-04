@@ -412,6 +412,58 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate subscription and its types', () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const subscription = gql\`
+        subscription {
+          onUserChange {
+            id
+            name
+          }
+        }
+      \`
+    `
+    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import { SubscriptionHookOptions, useSubscription } from '@apollo/client'
+        import gql from 'graphql-tag'
+
+        const subscription = gql\`
+          subscription subscribeToOnUserChange($id: ID!) {
+            onUserChange(id: $id) {
+              id
+              name
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string
+        }
+
+        export interface SubscriptionType {
+          onUserChange: UserType
+          __typename?: 'Subscription'
+        }
+
+        export interface UserType {
+          id: string
+          name?: string
+          __typename?: 'User'
+        }
+
+        export function useOnUserChangeSubscription(
+          options?: SubscriptionHookOptions<SubscriptionType, RequestType>,
+        ) {
+          return useSubscription<SubscriptionType, RequestType>(subscription, options)
+        }
+    `),
+    )
+  })
+
   test('should generate query with shared variable', () => {
     const query = `
       import gql from 'graphql-tag'

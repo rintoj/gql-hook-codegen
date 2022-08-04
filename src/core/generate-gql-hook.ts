@@ -106,7 +106,9 @@ function createQueryHook({
                         ts.factory.createIdentifier('variables'),
                         ts.factory.createIdentifier('request'),
                       ),
-                      requiredRequestVariables ? createSkip(requiredRequestVariables) : null,
+                      !isLazyQuery && requiredRequestVariables
+                        ? createSkip(requiredRequestVariables)
+                        : null,
                       ts.factory.createSpreadAssignment(ts.factory.createIdentifier('options')),
                     ].filter(i => !!i) as any,
                     true,

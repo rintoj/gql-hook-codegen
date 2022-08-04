@@ -650,7 +650,6 @@ describe('generateGQLHook', () => {
         ) {
           return useLazyQuery<QueryType, RequestType>(lazyQuery, {
             variables: request,
-            skip: !request.id,
             ...options,
           })
         }

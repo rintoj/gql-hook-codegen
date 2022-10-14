@@ -4,12 +4,19 @@ import * as ts from 'typescript'
 import { ById } from '../util/util'
 import { GQLType } from './extract-gql-types'
 
-enum GQLTypeToJSType {
-  'ID' = ts.SyntaxKind.StringKeyword,
-  'String' = ts.SyntaxKind.StringKeyword,
-  'Int' = ts.SyntaxKind.NumberKeyword,
-  'Float' = ts.SyntaxKind.NumberKeyword,
-  'Boolean' = ts.SyntaxKind.BooleanKeyword,
+function toJSType(type: string) {
+  switch (type) {
+    case 'ID':
+      return ts.SyntaxKind.StringKeyword
+    case 'String':
+      return ts.SyntaxKind.StringKeyword
+    case 'Int':
+      return ts.SyntaxKind.NumberKeyword
+    case 'Float':
+      return ts.SyntaxKind.NumberKeyword
+    case 'Boolean':
+      return ts.SyntaxKind.BooleanKeyword
+  }
 }
 
 export function readAndParseTSFile(filePath: string) {
@@ -224,7 +231,7 @@ export function createGQLQuery(query: string, variableName = 'query') {
 }
 
 export function createType(type: string, isArray: boolean, allowUndefined?: boolean) {
-  const jsType = (GQLTypeToJSType as any)[type]
+  const jsType = toJSType(type) as any
   let targetType = jsType
     ? ts.factory.createKeywordTypeNode(jsType)
     : ts.factory.createTypeReferenceNode(ts.factory.createIdentifier(type), undefined)

@@ -1,17 +1,14 @@
-name: Release npm package
+name: Lint
 
-on:
-  push:
-    branches:
-      - master
+on: pull_request
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: lint-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   release:
-    name: Release
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -22,7 +19,3 @@ jobs:
       - run: yarn run lint
       - run: yarn run test
       - run: yarn run build
-      - run: yarn run semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

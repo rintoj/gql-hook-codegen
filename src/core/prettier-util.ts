@@ -14,7 +14,6 @@ export function getPrettierConfig() {
     prettierConfigFile = prettierConfigs[++index]
   }
   try {
-    console.log('reading from package.json')
     const packageJSON = JSON.parse(fs.readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'))
     return packageJSON.prettier
   } catch (e) {

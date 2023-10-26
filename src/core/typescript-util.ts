@@ -173,7 +173,6 @@ export function printTSTree(node: ts.Node) {
 export function createImportStatement(clause: string, file: string) {
   return ts.factory.createImportDeclaration(
     undefined,
-    undefined,
     ts.factory.createImportClause(false, ts.factory.createIdentifier(clause), undefined),
     ts.factory.createStringLiteral(file),
   )
@@ -190,7 +189,6 @@ export function createNamedImports(imports: ById<string[]>) {
 
 export function createNamedImportStatement(imports: string[], file: string) {
   return ts.factory.createImportDeclaration(
-    undefined,
     undefined,
     ts.factory.createImportClause(
       false,
@@ -251,7 +249,6 @@ export function createType(type: string, isArray: boolean, allowUndefined?: bool
 
 export function createInterface({ name, originalName, fields }: GQLType, allowUndefined?: boolean) {
   return ts.factory.createInterfaceDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     ts.factory.createIdentifier(name),
     undefined,
@@ -279,7 +276,6 @@ export function createInterface({ name, originalName, fields }: GQLType, allowUn
 
 export function createEnum({ name, fields }: GQLType) {
   return ts.factory.createEnumDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     ts.factory.createIdentifier(name),
     fields.map(field =>
@@ -293,7 +289,6 @@ export function createEnum({ name, fields }: GQLType) {
 
 export function createUnion({ name, fields }: GQLType) {
   return ts.factory.createTypeAliasDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     ts.factory.createIdentifier(name),
     undefined,

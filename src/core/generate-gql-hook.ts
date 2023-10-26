@@ -41,6 +41,7 @@ function createQueryHook({
   hasVariables: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
+    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
@@ -48,6 +49,7 @@ function createQueryHook({
     [
       hasVariables
         ? ts.factory.createParameterDeclaration(
+            undefined,
             undefined,
             undefined,
             ts.factory.createIdentifier('request'),
@@ -60,6 +62,7 @@ function createQueryHook({
           )
         : (undefined as any),
       ts.factory.createParameterDeclaration(
+        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -163,12 +166,14 @@ function createMutationHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
+    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
+        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -225,12 +230,14 @@ function createSubscriptionHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
+    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
+        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),

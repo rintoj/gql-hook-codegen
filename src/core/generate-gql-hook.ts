@@ -72,7 +72,7 @@ function createQueryHook({
           [
             ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('QueryType'), undefined),
             ts.factory.createTypeReferenceNode(
-              ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+              ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
               undefined,
             ),
           ],
@@ -93,7 +93,7 @@ function createQueryHook({
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
                 undefined,
               ),
             ],
@@ -184,7 +184,7 @@ function createMutationHook({
             undefined,
           ),
           ts.factory.createTypeReferenceNode(
-            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
             undefined,
           ),
         ]),
@@ -203,7 +203,7 @@ function createMutationHook({
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
                 undefined,
               ),
             ],
@@ -248,7 +248,7 @@ function createSubscriptionHook({
             undefined,
           ),
           ts.factory.createTypeReferenceNode(
-            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+            ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
             undefined,
           ),
         ]),
@@ -267,7 +267,7 @@ function createSubscriptionHook({
                 undefined,
               ),
               ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'void'),
+                ts.factory.createIdentifier(hasVariables ? 'RequestType' : 'never'),
                 undefined,
               ),
             ],

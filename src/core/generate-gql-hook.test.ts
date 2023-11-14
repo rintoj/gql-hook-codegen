@@ -602,8 +602,8 @@ describe('generateGQLHook', () => {
 					__typename?: 'User'
         }
 
-        export function useMeQuery(options?: QueryHookOptions<QueryType, void>) {
-          return useQuery<QueryType, void>(query, options)
+        export function useMeQuery(options?: QueryHookOptions<QueryType, never>) {
+          return useQuery<QueryType, never>(query, options)
         }
     `),
     )
@@ -650,8 +650,8 @@ describe('generateGQLHook', () => {
 					__typename?: 'User'
         }
 
-        export function useMeQuery(options?: LazyQueryHookOptions<QueryType, void>) {
-          return useLazyQuery<QueryType, void>(lazyQuery, options)
+        export function useMeQuery(options?: LazyQueryHookOptions<QueryType, never>) {
+          return useLazyQuery<QueryType, never>(lazyQuery, options)
         }
     `),
     )
@@ -744,8 +744,8 @@ describe('generateGQLHook', () => {
 					__typename?: 'User'
         }
 
-        export function useSignInMutation(options?: MutationHookOptions<MutationType, void>) {
-          return useMutation<MutationType, void>(mutation, options)
+        export function useSignInMutation(options?: MutationHookOptions<MutationType, never>) {
+          return useMutation<MutationType, never>(mutation, options)
         }
     `),
     )

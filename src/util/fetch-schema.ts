@@ -1,7 +1,8 @@
+import * as fs from 'fs-extra'
 import { readFile } from 'fs-extra'
+import * as gql from 'graphql'
 import { getIntrospectionQuery } from 'graphql/utilities/getIntrospectionQuery'
 import fetch from 'node-fetch'
-import * as gql from 'graphql'
 
 interface Options {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -31,6 +32,11 @@ export async function fetchRemoteSchema(
 }
 
 export async function fetchLocalSchema(file: string): Promise<gql.DocumentNode> {
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `Error: The schema file at ${file} could not be found. Please use the '--schema-file' option. Refer to '--help' for additional details.`,
+    )
+  }
   const content = await new Promise<string>((resolve, reject) =>
     readFile(file, 'utf8', (error, data) => (error ? reject(error) : resolve(data))),
   )

@@ -1,8 +1,9 @@
-import { red, yellow } from 'chalk'
+import { yellow } from 'chalk'
 import { command, input } from 'clifer'
 import { sync } from 'fast-glob'
 import * as fs from 'fs-extra'
 import { DocumentNode, print } from 'graphql'
+import { dirname, resolve } from 'path'
 import { generateGQLHook, getPrettierOptions } from '../core'
 import { fetchLocalSchema, fetchRemoteSchema } from '../util/fetch-schema'
 import { md5Hex } from '../util/util'
@@ -13,7 +14,7 @@ interface Options {
   schemaFile?: string
   schemaUrl?: string
   package: string
-  ignore?: string[]
+  ignore?: string
   save?: boolean
 }
 
@@ -45,21 +46,37 @@ async function processFile(schema: DocumentNode, file: string, packageName: stri
   }
 }
 
+function identifyProjectRoot(root: string) {
+  let path = root
+  let counter = 5
+  while (counter-- > 0 && path !== '/' && !fs.existsSync(resolve(path, '.git'))) {
+    path = dirname(path)
+  }
+  if (path === '/') return root
+  return path
+}
+
 async function generate(options: Options) {
   const files = sync(options.pattern, {
     onlyFiles: true,
-    ignore: options.ignore,
+    ignore: options.ignore?.split(','),
   })
   if (!files.length) {
     console.log(yellow(`No files matching "${options.pattern}" found!`))
     return
   }
 
+  const path = identifyProjectRoot(process.cwd())
+  const [schemaFile] = sync(options.schemaFile ?? `${path}/**/schema.gql`, {
+    onlyFiles: true,
+    ignore: options.ignore?.split(','),
+  })
+
   try {
     renderText(`Fetching schema from ${options.schemaUrl ?? options.schemaFile}`, 'yellow')
     const schema = options.schemaUrl
       ? await fetchRemoteSchema(options.schemaUrl)
-      : await fetchLocalSchema(options.schemaFile ?? 'schema.gql')
+      : await fetchLocalSchema(schemaFile ?? resolve(process.cwd(), 'schema.gql'))
 
     if (options.schemaUrl && options.save) {
       await writeFile('schema.gql', print(schema))
@@ -70,17 +87,18 @@ async function generate(options: Options) {
     }
     renderText('Done!', 'green')
   } catch (e: any) {
-    console.error(red(e.message))
+    renderText(e.message, 'red')
+    process.exit(1)
   }
 }
 
 export default command<Options>('generate')
   .option(input('pattern').description('File pattern').string().default('**/*.gql.ts'))
-  .option(
-    input('schemaFile').description('Location of the schema file').string().default('./schema.gql'),
-  )
+  .option(input('schemaFile').description('Location of the schema file').string())
   .option(input('schemaUrl').description('Url to fetch graphql schema from ').string())
-  .option(input('ignore').description('Folders to ignore').string().default('node_modules,lib'))
+  .option(
+    input('ignore').description('Folders to ignore').string().default('node_modules,lib,build'),
+  )
   .option(input('package').description('Default package to use').string().default('@apollo/client'))
   .option(input('save').description('Save schema locally if --schema-url is used'))
   .handle(generate)

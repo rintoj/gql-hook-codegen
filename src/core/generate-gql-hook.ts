@@ -1,9 +1,9 @@
 import * as gql from 'graphql'
 import { toCamelCase, toClassName, toDashedName } from 'name-util'
-import { format, Options } from 'prettier'
+import { Options, format } from 'prettier'
 import * as ts from 'typescript'
 import { ById, reduceToFlatArray } from '../util/util'
-import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
+import { GQLObjectType, GQLType, extractGQLTypes } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
 import {
@@ -41,7 +41,6 @@ function createQueryHook({
   hasVariables: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
@@ -49,7 +48,6 @@ function createQueryHook({
     [
       hasVariables
         ? ts.factory.createParameterDeclaration(
-            undefined,
             undefined,
             undefined,
             ts.factory.createIdentifier('request'),
@@ -62,7 +60,6 @@ function createQueryHook({
           )
         : (undefined as any),
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -166,14 +163,12 @@ function createMutationHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -230,14 +225,12 @@ function createSubscriptionHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -418,11 +411,11 @@ interface GenerateGQLHookOptions {
   packageName: string
 }
 
-export function generateGQLHook(
+export async function generateGQLHook(
   schema: gql.DocumentNode,
   tsContent: string,
   options: GenerateGQLHookOptions = { packageName: '@apollo/client' },
-): string {
+): Promise<string> {
   const request = extractGQL(tsContent)
   const fixedQuery = fixGQLRequest(schema, request.gql)
   const requestDoc = parseSchema(fixedQuery)

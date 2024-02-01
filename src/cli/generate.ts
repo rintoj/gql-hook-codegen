@@ -34,7 +34,7 @@ async function processFile(schema: DocumentNode, file: string, packageName: stri
   renderStatus(file, 'Processing', 'yellow', false)
   const tsContent = await readFile(file)
   const idBefore = md5Hex(tsContent)
-  const hook = generateGQLHook(schema, tsContent, { prettierOptions, packageName })
+  const hook = await generateGQLHook(schema, tsContent, { prettierOptions, packageName })
   const idAfter = md5Hex(hook)
   if (idBefore === idAfter) {
     renderStatus(file, 'NO CHANGE', 'gray', true)
@@ -61,7 +61,7 @@ export async function generate(options: Options) {
       : await fetchLocalSchema(options.schemaFile ?? 'schema.gql')
 
     if (options.schemaURL && options.save) {
-      writeFile('schema.gql', print(schema))
+      await writeFile('schema.gql', print(schema))
     }
 
     for (const file of files) {

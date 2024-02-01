@@ -8,7 +8,7 @@ const prettierOptions = { ...JSON.parse(readFileSync('.prettierrc', 'utf8')), pa
 const generateGQLHookOptions = { prettierOptions, packageName: '@apollo/client' }
 
 describe('generateGQLHook', () => {
-  test('should generate query and its types', () => {
+  test('should generate query and its types', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -20,7 +20,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -61,7 +61,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with custom package and sort imports', () => {
+  test('should generate query with custom package and sort imports', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -73,7 +73,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, { prettierOptions, packageName: 'y-package' })
+    const hook = await generateGQLHook(schema, query, { prettierOptions, packageName: 'y-package' })
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
       import gql from 'graphql-tag'
@@ -114,7 +114,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query and its types with batched query', () => {
+  test('should generate query and its types with batched query', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -130,7 +130,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -183,7 +183,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query and its types with batched query and multiple inputs', () => {
+  test('should generate query and its types with batched query and multiple inputs', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -195,7 +195,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -237,7 +237,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query and its types with enum', () => {
+  test('should generate query and its types with enum', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -250,7 +250,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -298,7 +298,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with date', () => {
+  test('should generate query with date', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -311,7 +311,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -354,7 +354,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate mutation and its types', () => {
+  test('should generate mutation and its types', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -368,7 +368,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { MutationHookOptions, useMutation } from '@apollo/client'
@@ -412,7 +412,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate subscription and its types', () => {
+  test('should generate subscription and its types', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -425,7 +425,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { SubscriptionHookOptions, useSubscription } from '@apollo/client'
@@ -464,7 +464,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with shared variable', () => {
+  test('should generate query with shared variable', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -488,7 +488,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -561,7 +561,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with no request type if query has no parameters', () => {
+  test('should generate query with no request type if query has no parameters', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -575,7 +575,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'
@@ -609,7 +609,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate lazy query with no parameters', () => {
+  test('should generate lazy query with no parameters', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -623,7 +623,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
@@ -657,7 +657,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate lazy query and its types', () => {
+  test('should generate lazy query and its types', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -669,7 +669,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
@@ -709,7 +709,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with no request type if query has no parameters', () => {
+  test('should generate query with no request type if query has no parameters', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -721,7 +721,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { MutationHookOptions, useMutation } from '@apollo/client'
@@ -751,7 +751,7 @@ describe('generateGQLHook', () => {
     )
   })
 
-  test('should generate query with union', () => {
+  test('should generate query with union', async () => {
     const query = `
       import gql from 'graphql-tag'
 
@@ -783,7 +783,7 @@ describe('generateGQLHook', () => {
         }
       \`
     `
-    const hook = generateGQLHook(schema, query, generateGQLHookOptions)
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
     expect(trimPadding(hook)).toEqual(
       trimPadding(`
         import { QueryHookOptions, useQuery } from '@apollo/client'

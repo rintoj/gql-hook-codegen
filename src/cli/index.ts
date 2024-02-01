@@ -1,64 +1,6 @@
 #!/usr/bin/env node
 
-import { hideBin } from 'yargs/helpers'
-import yargs from 'yargs/yargs'
-import { generate } from './generate'
+import { cli, runCli } from 'clifer'
+import generate from './generate'
 
-export function cli(args: any) {
-  void yargs(hideBin(args))
-    .command(
-      'generate [pattern]',
-      'Generate graphql query, mutation or subscription react hook in TypeScript',
-      yargs => {
-        return yargs.positional('pattern', {
-          describe: 'File pattern',
-          default: '**/*.gql.ts',
-        })
-      },
-      argv => {
-        void generate({
-          pattern: argv.pattern,
-          schemaFile: argv.schemaFile as string,
-          schemaURL: argv.schemaURL as string,
-          packageName: argv.package as string,
-          ignore: (argv?.ignore as string)?.split(','),
-          save: argv.save as boolean,
-        })
-      },
-    )
-    .option('schemaFile', {
-      alias: 'f',
-      type: 'string',
-      default: './schema.gql',
-      description: 'Schema file',
-    })
-    .option('schemaURL', {
-      alias: 'u',
-      type: 'string',
-      description: 'URL to fetch graphql schema',
-    })
-    .option('ignore', {
-      alias: 'i',
-      type: 'string',
-      default: 'node_modules',
-      description: 'Folders to ignore eg: "node_modules,lib"',
-    })
-    .option('package', {
-      alias: 'p',
-      type: 'string',
-      default: '@apollo/client',
-      description: 'Package name to use in generated code',
-    })
-    .option('save', {
-      alias: 's',
-      type: 'boolean',
-      description: 'Save schema locally if --schemaURL is used',
-    })
-    .option('verbose', {
-      alias: 'v',
-      type: 'boolean',
-      description: 'Run with verbose logging',
-    })
-    .demandCommand(1)
-    .strictCommands().argv
-}
+runCli(cli('gql-hook-codegen').command(generate)).catch(e => console.error(e))

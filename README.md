@@ -96,6 +96,7 @@ export function useUserQuery(
 ## More Examples
 
 <!-- vscode-markdown-toc -->
+
 1. [Schema](./docs/examples.md#Schema)
 2. [Query](./docs/examples.md#Query)
 3. [Query with no parameters](./docs/examples.md#Querywithnoparameters)
@@ -111,23 +112,27 @@ export function useUserQuery(
 ## Usage
 
 ```sh
-gql-hook-codegen <command>
+gql-hook-codegen generate   [--pattern=<string>] [--schema-file=<string>] [--schema-url=<string>]
+                            [--ignore=<string>] [--package=<string>] [--save] [--help]
 
-Commands:
-  gql-hook-codegen generate [pattern]  Generate graphql query, mutation or
-                                       subscription react hook in TypeScript
+OPTIONS
 
-Options:
-      --help        Show help                                          [boolean]
-      --version     Show version number                                [boolean]
-  -f, --schemaFile  Schema file               [string] [default: "./schema.gql"]
-  -u, --schemaURL   URL to fetch graphql schema                         [string]
-  -i, --ignore      Folders to ignore eg: "node_modules,lib"
-                                              [string] [default: "node_modules"]
-  -p, --package     Package name to use in generated code
-                                            [string] [default: "@apollo/client"]
-  -s, --save        Save schema locally if --schemaURL is used         [boolean]
-  -v, --verbose     Run with verbose logging                           [boolean]
+--pattern=<string>       File pattern
+
+--schema-file=<string>   Location of the schema file
+
+--schema-url=<string>    Url to fetch graphql schema from
+
+--ignore=<string>        Folders to ignore
+
+--package=<string>       Default package to use
+
+--save                   Save schema locally if --schema-url is used
+
+COMMON
+
+--help                   Show help
+
 ```
 
 ## Automatic Release

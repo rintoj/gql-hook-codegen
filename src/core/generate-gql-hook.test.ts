@@ -403,6 +403,65 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate query with optional request parameter if none of the imports are mandatory', async () => {
+    const query = `
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query {
+          users {
+            id
+            status
+          }
+        }
+      \`
+    `
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`import { QueryHookOptions, useQuery } from '@apollo/client'
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query fetchUsers($next: String) {
+          users(next: $next) {
+            id
+            status
+          }
+        }
+      \`
+
+      export interface RequestType {
+        next?: string | undefined
+      }
+
+      export interface QueryType {
+        users: UserType[]
+      }
+
+      export interface UserType {
+        id: string
+        status?: UserStatus
+        __typename?: 'User'
+      }
+
+      export enum UserStatus {
+        ACTIVE = 'ACTIVE',
+        INACTIVE = 'INACTIVE',
+      }
+
+      export function useUsersQuery(
+        request?: RequestType,
+        options?: QueryHookOptions<QueryType, RequestType>,
+      ) {
+        return useQuery<QueryType, RequestType>(query, {
+          variables: request,
+          ...options,
+        })
+      }
+      `),
+    )
+  })
+
   test('should generate query with date', async () => {
     const query = `
       import gql from 'graphql-tag'
@@ -968,7 +1027,7 @@ describe('generateGQLHook', () => {
         }
 
         export function useMyNotificationsQuery(
-          request: RequestType,
+          request?: RequestType,
           options?: QueryHookOptions<QueryType, RequestType>,
         ) {
           return useQuery<QueryType, RequestType>(query, {

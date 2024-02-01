@@ -31,6 +31,7 @@ function createQueryHook({
   isLazyQuery,
   requiredRequestVariables,
   hasVariables,
+  isRequestOptional,
 }: {
   hookName: string
   responseType: string
@@ -39,6 +40,7 @@ function createQueryHook({
   isLazyQuery: boolean
   requiredRequestVariables: string[] | undefined
   hasVariables: boolean
+  isRequestOptional: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
@@ -51,7 +53,7 @@ function createQueryHook({
             undefined,
             undefined,
             ts.factory.createIdentifier('request'),
-            undefined,
+            isRequestOptional ? ts.factory.createToken(ts.SyntaxKind.QuestionToken) : undefined,
             ts.factory.createTypeReferenceNode(
               ts.factory.createIdentifier('RequestType'),
               undefined,
@@ -366,6 +368,11 @@ function generateHookForOperation(
     const requiredRequestVariables =
       operation === 'query' ? findRequiredRequestVariables(dataTypes) : undefined
 
+    const isRequestOptional =
+      dataTypes
+        .find(type => type.name === 'RequestType')
+        ?.fields?.every(field => !field.isNonNull) === true
+
     const statements = dataTypes.map(dataType => {
       if (dataType.type === GQLObjectType.INTERFACE && !!dataType.fields.length) {
         return createInterface(dataType, dataType.name === 'RequestType' && operation === 'query')
@@ -391,6 +398,7 @@ function generateHookForOperation(
             isLazyQuery,
             requiredRequestVariables,
             hasVariables: hasRequestVariables(dataTypes),
+            isRequestOptional,
           })
         : def.operation === 'mutation'
         ? createMutationHook({

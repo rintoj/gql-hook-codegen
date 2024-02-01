@@ -34,6 +34,7 @@ input RegisterUserInput {
 type Query {
   me: User
   user(id: ID!): User
+  users(next: String): [User]!
   tweet(id: ID!): Tweet
   followers(id: ID!, limit: Int): [User]!
   myNotifications: [Notification]!

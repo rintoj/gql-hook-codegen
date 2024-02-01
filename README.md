@@ -53,7 +53,7 @@ type Query {
 Step 3: Run the following code:
 
 ```sh
-npx gql-hook-codegen generate --schemaFile './schema.gql'
+npx gql-hook-codegen generate
 ```
 
 Step 4: Script will update `use-user.gql.ts` to the following:

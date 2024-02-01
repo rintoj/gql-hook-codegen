@@ -282,24 +282,36 @@ function createTSContent(
     .join(options?.blankLinesBetweenStatements ? '\n\n' : '\n')
 }
 
-function extractGQL(query: string) {
-  const sourceFile = parseTS(query)
+function extractGQL(sourceFile: ts.SourceFile) {
   const variable = selectTSNode(
     sourceFile,
     node =>
       ts.isVariableDeclaration(node) &&
       !!node.initializer &&
-      ts.isTaggedTemplateExpression(node.initializer) &&
-      ts.isIdentifier(node.initializer.tag) &&
-      node.initializer.tag.escapedText === 'gql',
+      ((ts.isTaggedTemplateExpression(node.initializer) &&
+        ts.isIdentifier(node.initializer.tag) &&
+        node.initializer.tag.escapedText === 'gql') ||
+        ts.isNoSubstitutionTemplateLiteral(node.initializer)),
   ) as ts.VariableDeclaration
 
   const gql =
     !!variable?.initializer &&
     ts.isTaggedTemplateExpression(variable.initializer) &&
     ts.isNoSubstitutionTemplateLiteral(variable.initializer.template)
-      ? (variable.initializer.template.rawText as string)
-      : ''
+      ? variable.initializer.template.rawText
+      : !!variable?.initializer && ts.isNoSubstitutionTemplateLiteral(variable.initializer)
+      ? variable.initializer.rawText
+      : undefined
+
+  if (!gql) {
+    throw new Error(`Could not identify GraphQL query or mutation from the content! Make sure you have defined it in the format:
+  const query = \`
+    query {
+      <your content>
+    }
+  \`
+`)
+  }
 
   return {
     gql,
@@ -406,6 +418,23 @@ function sortImportsByFilename(import1: ts.ImportDeclaration, import2: ts.Import
   )
 }
 
+const hooks = ['useQuery', 'useMutation', 'useSubscription']
+
+function identifyLibrary(sourceFile: ts.SourceFile) {
+  const imports = sourceFile.statements.find((s): s is ts.ImportDeclaration =>
+    ts.isImportDeclaration(s) &&
+    s.importClause?.namedBindings &&
+    ts.isNamedImports(s.importClause?.namedBindings)
+      ? !!s.importClause?.namedBindings?.elements.find(e =>
+          hooks.includes(e.name.escapedText ?? ''),
+        )
+      : false,
+  )
+  return imports?.moduleSpecifier && ts.isStringLiteral(imports?.moduleSpecifier)
+    ? imports?.moduleSpecifier.text
+    : undefined
+}
+
 interface GenerateGQLHookOptions {
   prettierOptions?: Options
   packageName: string
@@ -416,10 +445,11 @@ export async function generateGQLHook(
   tsContent: string,
   options: GenerateGQLHookOptions = { packageName: '@apollo/client' },
 ): Promise<string> {
-  const request = extractGQL(tsContent)
+  const sourceFile = parseTS(tsContent)
+  const request = extractGQL(sourceFile)
   const fixedQuery = fixGQLRequest(schema, request.gql)
   const requestDoc = parseSchema(fixedQuery)
-  const context = { imports: {}, packageName: options.packageName }
+  const context = { imports: {}, packageName: identifyLibrary(sourceFile) ?? options.packageName }
 
   const statements: ts.Statement[] = reduceToFlatArray(
     requestDoc.definitions as gql.DefinitionNode[],

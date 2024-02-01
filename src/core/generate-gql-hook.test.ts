@@ -61,6 +61,111 @@ describe('generateGQLHook', () => {
     )
   })
 
+  test('should generate query and its types without gql', async () => {
+    const query = `
+      const query = \`
+        query {
+          user {
+            name
+          }
+        }
+      \`
+    `
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import { QueryHookOptions, useQuery } from '@apollo/client'
+        import gql from 'graphql-tag'
+
+        const query = gql\`
+          query fetchUser($id: ID!) {
+            user(id: $id) {
+              name
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+        }
+
+        export interface QueryType {
+          user?: UserType
+        }
+
+        export interface UserType {
+          name?: string
+					__typename?: 'User'
+        }
+
+        export function useUserQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+            ...options,
+          })
+        }
+    `),
+    )
+  })
+
+  test('should preserve the client used', async () => {
+    const query = `
+      import { QueryHookOptions, useQuery } from '../my-client'
+      import gql from 'graphql-tag'
+
+      const query = gql\`
+        query {
+          user {
+            name
+          }
+        }
+      \`
+    `
+    const hook = await generateGQLHook(schema, query, generateGQLHookOptions)
+    expect(trimPadding(hook)).toEqual(
+      trimPadding(`
+        import { QueryHookOptions, useQuery } from '../my-client'
+        import gql from 'graphql-tag'
+
+        const query = gql\`
+          query fetchUser($id: ID!) {
+            user(id: $id) {
+              name
+            }
+          }
+        \`
+
+        export interface RequestType {
+          id: string | undefined
+        }
+
+        export interface QueryType {
+          user?: UserType
+        }
+
+        export interface UserType {
+          name?: string
+					__typename?: 'User'
+        }
+
+        export function useUserQuery(
+          request: RequestType,
+          options?: QueryHookOptions<QueryType, RequestType>,
+        ) {
+          return useQuery<QueryType, RequestType>(query, {
+            variables: request,
+            skip: !request.id,
+            ...options,
+          })
+        }
+    `),
+    )
+  })
+
   test('should generate query with custom package and sort imports', async () => {
     const query = `
       import gql from 'graphql-tag'

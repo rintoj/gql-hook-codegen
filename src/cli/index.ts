@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs/yargs'
 import { generate } from './generate'
 
 export function cli(args: any) {
-  yargs(hideBin(args))
+  void yargs(hideBin(args))
     .command(
       'generate [pattern]',
       'Generate graphql query, mutation or subscription react hook in TypeScript',
@@ -16,7 +16,7 @@ export function cli(args: any) {
         })
       },
       argv => {
-        generate({
+        void generate({
           pattern: argv.pattern,
           schemaFile: argv.schemaFile as string,
           schemaURL: argv.schemaURL as string,

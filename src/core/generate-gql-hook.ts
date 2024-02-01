@@ -1,9 +1,9 @@
 import * as gql from 'graphql'
 import { toCamelCase, toClassName, toDashedName } from 'name-util'
-import { format, Options } from 'prettier'
+import { Options, format } from 'prettier'
 import * as ts from 'typescript'
 import { ById, reduceToFlatArray } from '../util/util'
-import { extractGQLTypes, GQLObjectType, GQLType } from './extract-gql-types'
+import { GQLObjectType, GQLType, extractGQLTypes } from './extract-gql-types'
 import { fixGQLRequest } from './fix-gql-request'
 import { parseSchema } from './graphql-util'
 import {
@@ -31,6 +31,7 @@ function createQueryHook({
   isLazyQuery,
   requiredRequestVariables,
   hasVariables,
+  isRequestOptional,
 }: {
   hookName: string
   responseType: string
@@ -39,9 +40,9 @@ function createQueryHook({
   isLazyQuery: boolean
   requiredRequestVariables: string[] | undefined
   hasVariables: boolean
+  isRequestOptional: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
@@ -51,9 +52,8 @@ function createQueryHook({
         ? ts.factory.createParameterDeclaration(
             undefined,
             undefined,
-            undefined,
             ts.factory.createIdentifier('request'),
-            undefined,
+            isRequestOptional ? ts.factory.createToken(ts.SyntaxKind.QuestionToken) : undefined,
             ts.factory.createTypeReferenceNode(
               ts.factory.createIdentifier('RequestType'),
               undefined,
@@ -62,7 +62,6 @@ function createQueryHook({
           )
         : (undefined as any),
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -166,14 +165,12 @@ function createMutationHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -230,14 +227,12 @@ function createSubscriptionHook({
   hasVariables?: boolean
 }) {
   return ts.factory.createFunctionDeclaration(
-    undefined,
     [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
     undefined,
     ts.factory.createIdentifier(hookName),
     undefined,
     [
       ts.factory.createParameterDeclaration(
-        undefined,
         undefined,
         undefined,
         ts.factory.createIdentifier('options'),
@@ -289,24 +284,36 @@ function createTSContent(
     .join(options?.blankLinesBetweenStatements ? '\n\n' : '\n')
 }
 
-function extractGQL(query: string) {
-  const sourceFile = parseTS(query)
+function extractGQL(sourceFile: ts.SourceFile) {
   const variable = selectTSNode(
     sourceFile,
     node =>
       ts.isVariableDeclaration(node) &&
       !!node.initializer &&
-      ts.isTaggedTemplateExpression(node.initializer) &&
-      ts.isIdentifier(node.initializer.tag) &&
-      node.initializer.tag.escapedText === 'gql',
+      ((ts.isTaggedTemplateExpression(node.initializer) &&
+        ts.isIdentifier(node.initializer.tag) &&
+        node.initializer.tag.escapedText === 'gql') ||
+        ts.isNoSubstitutionTemplateLiteral(node.initializer)),
   ) as ts.VariableDeclaration
 
   const gql =
     !!variable?.initializer &&
     ts.isTaggedTemplateExpression(variable.initializer) &&
     ts.isNoSubstitutionTemplateLiteral(variable.initializer.template)
-      ? (variable.initializer.template.rawText as string)
-      : ''
+      ? variable.initializer.template.rawText
+      : !!variable?.initializer && ts.isNoSubstitutionTemplateLiteral(variable.initializer)
+      ? variable.initializer.rawText
+      : undefined
+
+  if (!gql) {
+    throw new Error(`Could not identify GraphQL query or mutation from the content! Make sure you have defined it in the format:
+  const query = \`
+    query {
+      <your content>
+    }
+  \`
+`)
+  }
 
   return {
     gql,
@@ -361,6 +368,11 @@ function generateHookForOperation(
     const requiredRequestVariables =
       operation === 'query' ? findRequiredRequestVariables(dataTypes) : undefined
 
+    const isRequestOptional =
+      dataTypes
+        .find(type => type.name === 'RequestType')
+        ?.fields?.every(field => !field.isNonNull) === true
+
     const statements = dataTypes.map(dataType => {
       if (dataType.type === GQLObjectType.INTERFACE && !!dataType.fields.length) {
         return createInterface(dataType, dataType.name === 'RequestType' && operation === 'query')
@@ -386,6 +398,7 @@ function generateHookForOperation(
             isLazyQuery,
             requiredRequestVariables,
             hasVariables: hasRequestVariables(dataTypes),
+            isRequestOptional,
           })
         : def.operation === 'mutation'
         ? createMutationHook({
@@ -413,20 +426,38 @@ function sortImportsByFilename(import1: ts.ImportDeclaration, import2: ts.Import
   )
 }
 
+const hooks = ['useQuery', 'useMutation', 'useSubscription']
+
+function identifyLibrary(sourceFile: ts.SourceFile) {
+  const imports = sourceFile.statements.find((s): s is ts.ImportDeclaration =>
+    ts.isImportDeclaration(s) &&
+    s.importClause?.namedBindings &&
+    ts.isNamedImports(s.importClause?.namedBindings)
+      ? !!s.importClause?.namedBindings?.elements.find(e =>
+          hooks.includes(e.name.escapedText ?? ''),
+        )
+      : false,
+  )
+  return imports?.moduleSpecifier && ts.isStringLiteral(imports?.moduleSpecifier)
+    ? imports?.moduleSpecifier.text
+    : undefined
+}
+
 interface GenerateGQLHookOptions {
   prettierOptions?: Options
   packageName: string
 }
 
-export function generateGQLHook(
+export async function generateGQLHook(
   schema: gql.DocumentNode,
   tsContent: string,
   options: GenerateGQLHookOptions = { packageName: '@apollo/client' },
-): string {
-  const request = extractGQL(tsContent)
+): Promise<string> {
+  const sourceFile = parseTS(tsContent)
+  const request = extractGQL(sourceFile)
   const fixedQuery = fixGQLRequest(schema, request.gql)
   const requestDoc = parseSchema(fixedQuery)
-  const context = { imports: {}, packageName: options.packageName }
+  const context = { imports: {}, packageName: identifyLibrary(sourceFile) ?? options.packageName }
 
   const statements: ts.Statement[] = reduceToFlatArray(
     requestDoc.definitions as gql.DefinitionNode[],

@@ -5,6 +5,8 @@
 This tool generates TypeScript types for queries/mutations written in an GraphQL project given a
 valid GraphQL schema.
 
+![hook-generation-git](https://github.com/rintoj/gql-hook-codegen/assets/10824903/b254ea6c-a813-4b42-828d-8f78a4d3eb3b)
+
 ## Install
 
 ### Yarn

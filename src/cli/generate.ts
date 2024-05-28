@@ -10,7 +10,8 @@ import { md5Hex } from '../util/util'
 import { renderStatus, renderText } from './render-status'
 
 interface Options {
-  pattern: string
+  pattern?: string
+  file?: string
   schemaFile?: string
   schemaUrl?: string
   package: string
@@ -57,10 +58,25 @@ function identifyProjectRoot(root: string) {
 }
 
 async function generate(options: Options) {
-  const files = sync(options.pattern, {
-    onlyFiles: true,
-    ignore: options.ignore?.split(','),
-  })
+  if (options?.file && options?.pattern) {
+    console.warn(
+      yellow(
+        'The "--pattern" input is being ignored because you have provided the "--file" option instead.',
+      ),
+    )
+  }
+  if (!options?.file && !options?.pattern) {
+    throw new Error('You must provide "--pattern" or "--file".')
+  }
+
+  const files = options?.file
+    ? [options?.file]
+    : options.pattern
+    ? sync(options.pattern, {
+        onlyFiles: true,
+        ignore: options.ignore?.split(','),
+      })
+    : []
   if (!files.length) {
     console.log(yellow(`No files matching "${options.pattern}" found!`))
     return
@@ -93,7 +109,8 @@ async function generate(options: Options) {
 }
 
 export default command<Options>('generate')
-  .option(input('pattern').description('File pattern').string().default('**/*.gql.ts'))
+  .option(input('pattern').description('File pattern').string())
+  .option(input('file').description('A specific file to process').string())
   .option(input('schemaFile').description('Location of the schema file').string())
   .option(input('schemaUrl').description('Url to fetch graphql schema from ').string())
   .option(

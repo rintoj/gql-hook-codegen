@@ -1,13 +1,21 @@
 import * as fs from 'fs-extra'
 import { resolve } from 'path'
 
+function sanitizePetterOptions(options: Record<string, string>) {
+  return Object.keys(options)
+    .filter(key => !['plugins'].includes(key))
+    .reduce((a, b) => ({ ...a, [b]: options[b] }), {})
+}
+
 export function getPrettierConfig() {
   const prettierConfigs = ['.prettierrc', '.prettierrc.json']
   let index = 0
   let prettierConfigFile = prettierConfigs[index]
   while (prettierConfigFile) {
     try {
-      return JSON.parse(fs.readFileSync(resolve(process.cwd(), prettierConfigFile), 'utf8'))
+      return sanitizePetterOptions(
+        JSON.parse(fs.readFileSync(resolve(process.cwd(), prettierConfigFile), 'utf8')),
+      )
     } catch (e) {
       // do nothing
     }
@@ -15,7 +23,7 @@ export function getPrettierConfig() {
   }
   try {
     const packageJSON = JSON.parse(fs.readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'))
-    return packageJSON.prettier
+    return sanitizePetterOptions(packageJSON.prettier)
   } catch (e) {
     // do nothing
   }

@@ -53,7 +53,7 @@ type Query {
 Step 3: Run the following code:
 
 ```sh
-npx gql-hook-codegen generate
+npx gql-hook-codegen generate --pattern="*.gql.ts"
 ```
 
 Step 4: Script will update `use-user.gql.ts` to the following:
@@ -95,6 +95,26 @@ export function useUserQuery(
 }
 ```
 
+## VS Code Integration
+
+Install [Save and Run](https://marketplace.visualstudio.com/items?itemName=wk-j.save-and-run) plugin
+and add the following code to `.settings.json`
+
+```json
+{
+  "saveAndRun": {
+    "commands": [
+      {
+        "match": ".gql.ts",
+        "cmd": "npx gql-hook-codegen generate --schema-file=../partner-portal-be/schema.gql --pattern='${file}'",
+        "useShortcut": false,
+        "silent": false
+      }
+    ]
+  }
+}
+```
+
 ## More Examples
 
 <!-- vscode-markdown-toc -->
@@ -111,15 +131,40 @@ export function useUserQuery(
 10. [Lazy query](./docs/examples.md#Lazyquery)
 11. [Query with union](./docs/examples.md#Querywithunion)
 
-## Usage
+## Options
 
 ```sh
-gql-hook-codegen generate   [--pattern=<string>] [--schema-file=<string>] [--schema-url=<string>]
-                            [--ignore=<string>] [--package=<string>] [--save] [--help]
+gql-hook-codegen   <generate> [--help] [--doc]
+
+COMMANDS
+
+generate
+
+COMMON
+
+--help     Show help
+
+--doc      Generate documentation
+
+```
+
+## gql-hook-codegen generate
+
+```sh
+
+gql-hook-codegen generate   [--pattern=<string>]
+                                      [--file=<string>]
+                                      [--schema-file=<string>]
+                                      [--schema-url=<string>]
+                                      [--ignore=<string>]
+                                      [--package=<string>]
+                                      [--save]
 
 OPTIONS
 
 --pattern=<string>       File pattern
+
+--file=<string>          A specific file to process
 
 --schema-file=<string>   Location of the schema file
 
@@ -129,11 +174,8 @@ OPTIONS
 
 --package=<string>       Default package to use
 
---save                   Save schema locally if --schema-url is used
-
-COMMON
-
---help                   Show help
+--save                   Save schema locally if --schema-url is
+                         used
 
 ```
 
